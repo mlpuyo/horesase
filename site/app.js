@@ -24,8 +24,7 @@ function show(){
 	var childURL = '<span>aaa</span><br>';
 	var childImg = '<img src="image/test.gif">';
 
-	$("#out").append(childURL).append(childImg).append(db.main + " " + db.name);
-	
+	$("#out").append(childURL).append(childImg).append("<br>" + db[0].title + "<br>" + db[0].body);
 }
 
 //
