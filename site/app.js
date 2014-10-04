@@ -11,8 +11,7 @@ $(document).ready(function(){
 	// bind event for debug 
 	$("#keyword").change(function(){
 		searchInDb();
-	})
-	
+	})	
 });
 
 function searchInDb(){
@@ -47,7 +46,8 @@ function show(entry){
 	$("#out").empty();
 
 	// 1: output image. First !
-	var childImg = '<img src="image/test.gif">';
+	var url = entry.image;
+	var childImg = '<img src="' + url + '">';
 	$("#out").append(childImg);
 
 	// 2: output caption or debug info.
