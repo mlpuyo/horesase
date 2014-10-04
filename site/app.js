@@ -1,12 +1,28 @@
+//
+// UI for Json Search Engine
+//
+
+function searchInDb(){
+	show();
+}
+
+function show(){
+	$("#out").empty();
+	
+	var child = '<img src="image/test.gif">';
+	$("#out").append(child);
+}
+
+//
+//  UI for Google Image Search
+//
 var googleQuery = "&q=site:jigokuno.com"; // image search
 var googleImageSearchURL = "https://www.google.co.jp/search?tbm=isch"
 
 function search(){
 	var keyword = " " + $("#keyword").val();
 	var url = googleImageSearchURL + googleQuery + encodeURI(keyword);
-//	location.href(url);
 	$(location).attr("href", url);
-//	alert(url);
 }
 
 // query parameta
