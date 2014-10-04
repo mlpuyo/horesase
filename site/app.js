@@ -8,9 +8,11 @@ function searchInDb(){
 
 function show(){
 	$("#out").empty();
-	
-	var child = '<img src="image/test.gif">';
-	$("#out").append(child);
+
+	var childURL = '<span>aaa</span><br>';
+	var childImg = '<img src="image/test.gif">';
+
+	$("#out").append(childURL).append(childImg);
 }
 
 //
