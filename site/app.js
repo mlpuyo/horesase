@@ -1,6 +1,15 @@
+// ----------------------------------------------------------------------------
 //
 // UI for Json Search Engine
 //
+// ----------------------------------------------------------------------------
+$(document).ready(function(){
+	
+	// prepare db from local json.
+	// NOTE: test in Safari, not Chrome.
+	loadDb();
+	
+});
 
 function searchInDb(){
 	show();
@@ -9,15 +18,32 @@ function searchInDb(){
 function show(){
 	$("#out").empty();
 
+	// FIXME
+	// URLをローカルのJSONからレコードを引っ張ってくる
+
 	var childURL = '<span>aaa</span><br>';
 	var childImg = '<img src="image/test.gif">';
 
-	$("#out").append(childURL).append(childImg);
+	$("#out").append(childURL).append(childImg).append(db.main + " " + db.name);
+	
 }
 
 //
+// Utilities ...
+//
+var db;
+
+function loadDb(){
+	$.get("data/dummy.json", function(data){ 
+		db = $.parseJSON(data); 
+	});
+}
+
+// ----------------------------------------------------------------------------
+//
 //  UI for Google Image Search
 //
+// ----------------------------------------------------------------------------
 var googleQuery = "&q=site:jigokuno.com"; // image search
 var googleImageSearchURL = "https://www.google.co.jp/search?tbm=isch"
 
