@@ -7,25 +7,54 @@ $(document).ready(function(){
 	
 	// prepare db from local json.
 	loadDb();  	// NOTE : test in Safari, not Chrome.
-	
+
+	// bind event for debug 
+	$("#keyword").change(function(){
+		searchInDb();
+	})	
 });
 
 function searchInDb(){
-	show();
+	if (true){	// FIXME
+		var num = $("#keyword").val();
+		var targetEntry = getEntry(num);
+		
+		if (typeof targetEntry == 'object'){
+			show(targetEntry);
+		}	
+	}	
 }
 
-function show(){
+// returns db entry.
+function getEntry(index){
+	if (db[index] === void 0){ // undefined check
+		showInfo("No such entry." + "... id[" + index + "]" );
+		return;
+	} else { // safe entry
+		return db[index];
+	}
+}
+
+function showInfo(str){
+	$("#out").empty();
+	
+	var mess = '<span>' + str + '</span><br>'
+	$("#out").prepend(mess);	
+}
+
+function show(entry){
 	$("#out").empty();
 
 	// 1: output image. First !
-	var childImg = '<img src="image/test.gif">';
+	var url = entry.image;
+	var childImg = '<img src="' + url + '">';
 	$("#out").append(childImg);
 
 	// 2: output caption or debug info.
 	//       id  character  title   body                      image
 	//       1   KAZ(32)    ドラム     この世に存在するドラムは\n\n全て俺が叩く\n  http://...
 	var cr = "<br>";
-	var en = db[0]; // entry
+	var en = entry;
 	
 	// TODO : set attr (hankaku font)
 	$("#out").append(
