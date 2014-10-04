@@ -7,27 +7,40 @@ $(document).ready(function(){
 	
 	// prepare db from local json.
 	loadDb();  	// NOTE : test in Safari, not Chrome.
+
+	// bind event for debug 
+	$("#keyword").change(function(){
+		searchInDb();
+	})
 	
 });
 
 function searchInDb(){
-//	show();
-	
-	if (true){
+	if (true){	// FIXME
 		var num = $("#keyword").val();
 		var targetEntry = getEntry(num);
-		show(targetEntry);
+		
+		if (typeof targetEntry == 'object'){
+			show(targetEntry);
+		}	
 	}	
 }
 
-// returns db entry. safely.
+// returns db entry.
 function getEntry(index){
 	if (db[index] === void 0){ // undefined check
-		alert("no such entry.");
-		return db[0];
+		showInfo("No such entry." + "... id[" + index + "]" );
+		return;
 	} else { // safe entry
 		return db[index];
 	}
+}
+
+function showInfo(str){
+	$("#out").empty();
+	
+	var mess = '<span>' + str + '</span><br>'
+	$("#out").prepend(mess);	
 }
 
 function show(entry){
