@@ -6,8 +6,7 @@
 $(document).ready(function(){
 	
 	// prepare db from local json.
-	// NOTE: test in Safari, not Chrome.
-	loadDb();
+	loadDb();  	// NOTE : test in Safari, not Chrome.
 	
 });
 
@@ -23,10 +22,9 @@ function show(){
 	$("#out").append(childImg);
 
 	// 2: output caption or debug info.
-	// id  character  title   body                      image
-	// 1   KAZ(32)    ドラム     この世に存在するドラムは\n\n全て俺が叩く\n  http://...
+	//       id  character  title   body                      image
+	//       1   KAZ(32)    ドラム     この世に存在するドラムは\n\n全て俺が叩く\n  http://...
 	var cr = "<br>";
-	var ws = "&nbsp;&nbsp;&nbsp;&nbsp;" // 4 spaces.
 	var en = db[0]; // entry
 	
 	// TODO : set attr (hankaku font)
@@ -37,12 +35,9 @@ function show(){
 		+ padSpace("title:", 8)     + en.title 
 		+ cr 
 		+ padSpace("body:", 9)      + en.body);
-		
-	$.("#out").set
 }
 
 function padSpace(targetStr, times ) {
-//	var spaces = ""; var ws = " x";
 	var spaces = ""; var ws = "&nbsp;" 
 
 	for (var i=0; i<times; i++){
