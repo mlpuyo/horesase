@@ -11,10 +11,26 @@ $(document).ready(function(){
 });
 
 function searchInDb(){
-	show();
+//	show();
+	
+	if (true){
+		var num = $("#keyword").val();
+		var targetEntry = getEntry(num);
+		show(targetEntry);
+	}	
 }
 
-function show(){
+// returns db entry. safely.
+function getEntry(index){
+	if (db[index] === void 0){ // undefined check
+		alert("no such entry.");
+		return db[0];
+	} else { // safe entry
+		return db[index];
+	}
+}
+
+function show(entry){
 	$("#out").empty();
 
 	// 1: output image. First !
@@ -25,7 +41,7 @@ function show(){
 	//       id  character  title   body                      image
 	//       1   KAZ(32)    ドラム     この世に存在するドラムは\n\n全て俺が叩く\n  http://...
 	var cr = "<br>";
-	var en = db[0]; // entry
+	var en = entry;
 	
 	// TODO : set attr (hankaku font)
 	$("#out").append(
