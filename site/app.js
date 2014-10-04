@@ -18,13 +18,37 @@ function searchInDb(){
 function show(){
 	$("#out").empty();
 
-	// FIXME
-	// URLをローカルのJSONからレコードを引っ張ってくる
-
-	var childURL = '<span>aaa</span><br>';
+	// 1: output image. First !
 	var childImg = '<img src="image/test.gif">';
+	$("#out").append(childImg);
 
-	$("#out").append(childURL).append(childImg).append("<br>" + db[0].title + "<br>" + db[0].body);
+	// 2: output caption or debug info.
+	// id  character  title   body                      image
+	// 1   KAZ(32)    ドラム     この世に存在するドラムは\n\n全て俺が叩く\n  http://...
+	var cr = "<br>";
+	var ws = "&nbsp;&nbsp;&nbsp;&nbsp;" // 4 spaces.
+	var en = db[0]; // entry
+	
+	// TODO : set attr (hankaku font)
+	$("#out").append(
+		  cr
+		+ padSpace("character:", 4) + en.character
+		+ cr
+		+ padSpace("title:", 8)     + en.title 
+		+ cr 
+		+ padSpace("body:", 9)      + en.body);
+		
+	$.("#out").set
+}
+
+function padSpace(targetStr, times ) {
+//	var spaces = ""; var ws = " x";
+	var spaces = ""; var ws = "&nbsp;" 
+
+	for (var i=0; i<times; i++){
+		spaces += ws;
+	}
+	return targetStr + spaces;
 }
 
 //
