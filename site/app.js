@@ -66,24 +66,26 @@ function show(entry){
 		+ padSpace("body:", 9)      + en.body);
 }
 
-function padSpace(targetStr, times ) {
-	var spaces = ""; var ws = "&nbsp;" 
-
-	for (var i=0; i<times; i++){
-		spaces += ws;
-	}
-	return targetStr + spaces;
-}
-
 //
 // Utilities ...
 //
 var db;
 
 function loadDb(){
-	$.get("data/dummy.json", function(data){ 
+
+//	$.get("data/dummy.json", function(data){ 		// dummy data
+	$.get("data/meigens_f.json", function(data){ 	// full data, formated
 		db = $.parseJSON(data); 
 	});
+
+}
+
+function padSpace(targetStr, times ) {
+	var spaces = ""; var ws = "&nbsp;" 
+	for (var i=0; i<times; i++){
+		spaces += ws;
+	}
+	return targetStr + spaces;
 }
 
 // ----------------------------------------------------------------------------

@@ -1,32 +1,56 @@
-・Webリソースからjsonデータベースを作成するためのツール群
-	https://github.com/june29/horesase-boys
-	ミサワサイトをスクレイピングするRuby製のスクレーパー
+各種　覚え書き
+
+■当アプリで読み込んでいるデータ
+	・後述の meigens.json を用いて、
+		画像を原典のサイトから取得する形式としています。
+		タイトル、本文はjsonから読み込みしています。
+
+■動作確認用データ		
+  meigens.json は1400件ほどデータを持っているが、改行が入っていないので扱いづらい。
+　そこで、meigens.json から一部データを取り出し整形したjsonをアプリで使う手順を示す。
+	1) 適当にjqコマンドでレコードを抜粋
+		cat meigens.json | jq '.[]' | head > dummy.json
+	2) レコード区切り入れる
+		sed -i -e "s:}:},:g" dummy.json
+	3) 配列化
+		先頭行に [	追加
+		末尾行に ]	追加
+	4) app.jsでのファイル指定を修正する。
+	5) Safariで動作確認する。
+	以上
+
+
+■依拠しているツール
+	1) ルビーアプリ
+		Webリソースからjsonデータベースを作成するためのツール群
+		https://github.com/june29/horesase-boys
+		ミサワサイトをスクレイピングするRuby製のスクレーパー
 	
-・作成されたjsonデータベース
-	http://horesase-boys.herokuapp.com/meigens.json
+	2) 作成されたjsonデータベース
+		http://horesase-boys.herokuapp.com/meigens.json
 	
-データベース1レコードの構造はこんな感じ
- {
-   "body": "あいつ…\n戦いの中で\nどんどん\n成長して\nいきやがる…！\nどんだけ普段\n練習してないんだ…！\n",
-   "eid": 12183867,
-   "cid": 70,
-   "character": "健二(33)",
-   "image": "http://livedoor.blogimg.jp/jigokuno_misawa/imgs/4/e/4ed868a7-s.gif",
-   "title": "さすがにそこまで成長するってなると",
-   "id": 1476
- }
+	3) データベース1レコードの構造はこんな感じ
+		{
+			"body": "あいつ…\n戦いの中で\nどんどん\n成長して\nいきやがる…！\nどんだけ普段\n練習してないんだ…！\n",
+			"eid": 12183867,
+			"cid": 70,
+			"character": "健二(33)",
+			"image": "http://livedoor.blogimg.jp/jigokuno_misawa/imgs/4/e/4ed868a7-s.gif",
+			"title": "さすがにそこまで成長するってなると",
+			"id": 1476
+ 		}
 
 
-body:	名言
-image: 	オリジナルの画像へのリンク
-cid/character:	キャラクターIDと名前
-title:  記事のタイトル
-id:	名言のシーケンス番号。「惚れさせ〜」にあたる通番
-eid:	※不明
+		body:	名言
+		image: 	オリジナルの画像へのリンク
+		cid/character:	キャラクターIDと名前
+		title: 記事のタイトル
+		id:  名言のシーケンス番号。「惚れさせ〜」にあたる通番
+		eid: エントリーID.元サイトで、エントリ別で表示する際に使われているシーケンス番号。
 
 
-
-jsonのパーサーコマンド(jq)を使って概要をつかんでみる
+■参考: jsonパーサーの使いかた
+	jqというのをつかってながめてみる時の　コマンド例
 
 	◆キャラクター別の名言数を取り出す
 		$ cat meigens.json | jq '.[] | .character' | sort | uniq -c | sort -nr
@@ -51,7 +75,5 @@ jsonのパーサーコマンド(jq)を使って概要をつかんでみる
 	◆名言を取り出す
 		cat meigens.json | jq '.[] | .body'
 
-
-※参考
-	http://blog.serverfrog.jp/jq-tutorial/
-
+	※参考サイト
+		http://blog.serverfrog.jp/jq-tutorial/
