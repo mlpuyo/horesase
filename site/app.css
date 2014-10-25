@@ -1,0 +1,26 @@
+div.main {
+  
+  width: 400px; 
+  height: 400px; 
+  margin: 0 auto;
+  text-align: center;  
+  border: 0px solid #FF0000;  
+
+  position: relative;
+  
+  -webkit-transform: translateY(+5%);
+  -ms-transform: translateY(+5%);
+  transform: translateY(+5%);
+}
+
+input#keyword {
+    width: 35px;
+}
+
+body {
+    background-color: #bbbbbb
+}
+
+p.dummy {
+    color: #555555;
+}
