@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<title> .. h o r e s a s u .. | .. M a c h i n e L e a r n i n g .. </title>
 		<script type="text/javascript" src="lib/js/jquery-1.9.1.min.js"></script>
 		<script type="text/javascript" src="app.js"></script>
+		<link type="text/css" rel="stylesheet" href="app.css" />
 	</head>
 	<body>
-		<div id="container" align="center">
+		<div id="container" class="main">
 			<div id="in">
 				<input type="text" id="keyword" pattern="^[0-9]+$"/><br>
 				<button type="submit" onclick="searchInDb()">jsonからURL取得!</button><br>
-				<button type="submit" onclick="search()">Google Image 検索!</button>
+				<br>
 			</div>
 			<hr>
-			<div id="out">
-				dummy
+			<div><br><!-- スペーサ-->
+				<div id="out">
+					<p class="dummy">dummy</p>
+				</div>
+				<br><!-- スペーサ-->
 			</div>
-		</div>
+			<hr>
+		</div><!-- container -->
 	</body>
 </html>
