@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
+import csv
 import os
 import sys
 import nltk
 import pickle
 import webbrowser
+import unicodedata
 from subprocess import Popen, PIPE
 
 '''
@@ -16,18 +18,25 @@ pip install mecab-python3
 '''
 
 
-def breakdown_into_validwords(str):
+def breakdown_into_validwords(string):
     '''
     mecabを使って形態素解析
     '''
     ret_list = []
+
+    if string == '' or not(isinstance(string, str)):
+        return ret_list
+
+    string = string.replace("\n", "")
+
     with open('.input.txt', 'w') as f:
         # 適当な例外処理
         try:
-            f.write(str)
+            f.write(string)
         except:
             return ret_list
 
+    # 無理やりmecabで処理
     p = Popen(["mecab", "-Ochasen", ".input.txt"], stdout=PIPE)
     while 1:
         line = p.stdout.readline()[:-1]
@@ -36,14 +45,25 @@ def breakdown_into_validwords(str):
         else:
             line = line.decode('utf-8')
 
-        if not line or line[:3] == "EOS":
+        if line[:3] == "EOS":
             break
+        if not line:
+            continue
 
         line = line.split('\t')
-        if (line[3][:2] == '名詞' or line[3][:2] == '動詞' or line[3][:2] == '副詞'
-                or line[3][:3] == '形容詞') and line[2] != '*':
-            # print("type:%s, value:%s" % (line[3], line[2]))
-            ret_list.append(line[2])
+        word = line[2]
+
+        # 漢字でない一文字のwordは無視
+        # 'ー'や'*'も同様
+        if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
+            continue
+        # 二文字のひらがなは無視
+        if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
+                and unicodedata.name(word[1])[0:4] == 'HIRA'):
+            continue
+        if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
+                or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
+            ret_list.append(word)
 
     p.wait()
     return ret_list
@@ -53,6 +73,7 @@ def make_pickle_from_json(fn='../meigens.json'):
     '''
     meigens.jsonを形態素解析し、辞書型の配列を作成・pickle保存
     '''
+    print("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
 
@@ -60,7 +81,10 @@ def make_pickle_from_json(fn='../meigens.json'):
     for meigen in meigenRowData:
         data = {}
         words = breakdown_into_validwords(meigen['body'])
-        words.insert(0, meigen['title'])
+        title_words = breakdown_into_validwords(meigen['title'])
+        words += title_words
+        if len(words) <= 1:
+            continue
 
         data['id'] = meigen['id']
         data['url'] = meigen['image']
@@ -69,17 +93,21 @@ def make_pickle_from_json(fn='../meigens.json'):
         data['meigen'] = meigen['body']
         data['words'] = words
         meigenData.append(data)
+        print('id = %d' % data['id'])
 
     with open('meigenWords.bin', 'wb') as f:
         pickle.dump(meigenData, f)
 
-    with open('meigenWords.json', mode='w', encoding='utf-8') as f:
-        json.dump(meigenData, f)
+    with open('meigenWords.csv', mode='w', encoding='utf-8') as f:
+        writer = csv.writer(f, lineterminator='\n')
+        for data in meigenData:
+            writer.writerow(data["words"])
 
 
 def main():
 
     # pickleがなければ実行。時間がかかる
+    # make_pickle_from_json()
     if not(os.path.exists('meigenWords.bin')):
         make_pickle_from_json()
 
@@ -115,14 +143,13 @@ def main():
             match_meigen = meigen['meigen']
             match_words = meigen['words']
 
-    webbrowser.open(match_url)
     print("r = %f" % min_r)
     print("title: %s" % match_title)
     print("chr: %s" % match_chr)
-    print("meigen: %s" % match_meigen)
+    print("meigen: %s" % match_meigen.replace("\n", ""))
     print("words: %s" % match_words)
     print("tweetWords: %s" % tweetWords)
-    print("url: %s" % match_url)
+    webbrowser.open(match_url)
 
 if __name__ == '__main__':
     main()
