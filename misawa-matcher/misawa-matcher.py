@@ -16,13 +16,12 @@ pip install mecab-python3
 '''
 
 
-
 def main():
 
     # pickleがなければ実行。時間がかかる
     # make_pickle_from_json()
     if not(os.path.exists('meigenWords.bin')):
-        make_pickle_from_json()
+        mecab_func.make_pickle_from_json()
 
     with open('meigenWords.bin', 'rb') as f:
         try:
@@ -39,6 +38,7 @@ def main():
     tweetWords = mecab_func.breakdown_into_validwords(tweet)
 
     min_r = 100.
+    matched_inf = {}
     for meigen in meigenWords:
         words = meigen['words']
 
@@ -50,19 +50,12 @@ def main():
 
         if r < min_r:
             min_r = r
-            match_url = meigen['url']
-            match_chr = meigen['chr']
-            match_title = meigen['title']
-            match_meigen = meigen['meigen']
-            match_words = meigen['words']
+            matched_inf = meigen
 
     print("r = %f" % min_r)
-    print("title: %s" % match_title)
-    print("chr: %s" % match_chr)
-    print("meigen: %s" % match_meigen.replace("\n", ""))
-    print("words: %s" % match_words)
+    print(matched_inf)
     print("tweetWords: %s" % tweetWords)
-    webbrowser.open(match_url)
+    webbrowser.open(matched_inf['image'])
 
 if __name__ == '__main__':
     main()
