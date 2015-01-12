@@ -1,3 +1,4 @@
+#! py -3
 # -*- coding: utf-8 -*-
 import json
 import csv
@@ -7,32 +8,32 @@ import nltk
 import pickle
 import webbrowser
 import unicodedata
+import MeCab
 from subprocess import Popen, PIPE
 
 '''
 コマンドライン引数から読み込んだ文章で類似度検索
-mecabへのパスが通っている必要あり（pythonバインディングは利用せず）
-
-参考:mecabのpythonバインディングのインストールは次でイケる(mac, linux)
+mecabのpythonバインディングのインストールは次から(mac, linux)
 pip install mecab-python3
 '''
 
 
-def breakdown_into_validwords(string):
+def breakdown_into_validwords2(sentence):
     '''
     mecabを使って形態素解析
+    pythonバインディングを利用しない
     '''
     ret_list = []
 
-    if string == '' or not(isinstance(string, str)):
+    if sentence == '' or not(isinstance(sentence, str)):
         return ret_list
 
-    string = string.replace("\n", "")
+    sentence = sentence.replace("\n", "")
 
     with open('.input.txt', 'w') as f:
         # 適当な例外処理
         try:
-            f.write(string)
+            f.write(sentence)
         except:
             return ret_list
 
@@ -66,6 +67,42 @@ def breakdown_into_validwords(string):
             ret_list.append(word)
 
     p.wait()
+    return ret_list
+
+
+def breakdown_into_validwords(sentence):
+    '''
+    mecabを使って形態素解析
+    pythonバインディングを利用
+    '''
+    ret_list = []
+
+    if sentence == '' or not(isinstance(sentence, str)):
+        return ret_list
+
+    sentence = sentence.replace("\n", "")
+
+    model = MeCab.Model_create("-Ochasen")
+    tagger = model.createTagger()
+    lines = tagger.parse(sentence).split('\n')
+    for line in lines:
+        if line == "EOS":
+            break
+        line = line.split('\t')
+        word = line[2]
+
+        # 漢字でない一文字のwordは無視
+        # 'ー'や'*'も同様
+        if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
+            continue
+        # 二文字のひらがなは無視
+        if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
+                and unicodedata.name(word[1])[0:4] == 'HIRA'):
+            continue
+        if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
+                or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
+            ret_list.append(word)
+
     return ret_list
 
 
