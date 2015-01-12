@@ -13,6 +13,7 @@ import mecab_func
 コマンドライン引数から読み込んだ文章で類似度検索
 mecabのpythonバインディングのインストールは次から(mac, linux)
 pip install mecab-python3
+※気が向く限りPEP8に則る
 '''
 
 

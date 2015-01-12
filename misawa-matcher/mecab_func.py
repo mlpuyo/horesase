@@ -1,6 +1,7 @@
 #! py -3
 # -*- coding: utf-8 -*-
 import json
+import os
 import pickle
 import csv
 import unicodedata
@@ -33,11 +34,14 @@ def breakdown_into_validwords2(sentence):
     p = Popen(["mecab", "-Ochasen", ".input.txt"], stdout=PIPE)
     while 1:
         line = p.stdout.readline()[:-1]
-        print(line.decode('cp932'))
-        # if os.name == 'nt':
-        #     line = line.decode('cp932')
-        # else:
-        #     line = line.decode('utf-8')
+        try:
+            if os.name == 'nt':
+                line = line.decode('cp932')
+            else:
+                line = line.decode('utf-8')
+        except UnicodeDecodeError:
+            print('文字エラー')
+            print('breakdown_into_validwordsを利用してちょ')
 
         if line[:3] == "EOS":
             break
@@ -77,7 +81,6 @@ def breakdown_into_validwords(sentence):
     model = MeCab.Model_create("-Ochasen")
     tagger = model.createTagger()
     lines = tagger.parse(sentence).split('\n')
-    print("processing...")
     for line in lines:
         if line == "EOS":
             break
@@ -95,7 +98,7 @@ def breakdown_into_validwords(sentence):
         if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
                 or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
             ret_list.append(word)
-            print(word)
+            # print(word)
 
     return ret_list
 
@@ -124,7 +127,8 @@ def make_pickle_from_json(fn='../meigens.json'):
         data['body'] = meigen['body']
         data['words'] = words
         meigenData.append(data)
-        print('id = %d' % data['id'])
+        if data['id'] % 50 == 0:
+            print('id = %d' % data['id'])
 
     with open('meigenWords.bin', 'wb') as f:
         pickle.dump(meigenData, f)
@@ -136,8 +140,8 @@ def make_pickle_from_json(fn='../meigens.json'):
 
 
 def update_misawa_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
-    # 画像ファイルのURLを開く
     try:
+        print("downloading json...")
         r = urllib.request.urlopen(url)
     except:
         print('Could not download json\nCheck Internet Connetcion...')
