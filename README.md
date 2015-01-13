@@ -10,8 +10,7 @@ IDを入力すると、惚れさせ男子の名言を表示します。
 - https://github.com/june29/horesase-boys
 
 
-# misawa-matcher実行環境
-## Ubuntu 14.04, python3.4(64bit)
+## misawa-matcher実行環境（Ubuntu 14.04, python3.4(64bit)）
 ### pythonのバージョンについて
 `python3`でpython3.xを起動。
 pipは`pip3`でpython3.xのpipが実行できる。
@@ -59,7 +58,7 @@ def cmd2(str):
 sudo pip3 install -e .
 ```
 
-## windows8.1, python3.4(64bit)
+## misawa-matcher実行環境（windows8.1, python3.4(64bit)）
 [この記事](http://qiita.com/ykchat/items/97dd7be100bfa837b7c4)が参考になる。
 python64bitの場合、mecabのビルドが必要。
 
@@ -84,9 +83,12 @@ C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\vcvarsx86_a
 nmake -f Makefile.msvc.in
 ```
 
-ただし、makefileに辞書のバージョン番号を埋め込む必要があるので注意。
+ただし、makefileは適宜修正する。
+特に辞書のバージョン番号を埋め込む必要があるので注意。
 ```Makefile
--DDIC_VERSION=102
+LDFLAGS = /nologo /OPT:REF /OPT:ICF /LTCG /NXCOMPAT /DYNAMICBASE /MACHINE:X64 ADVAPI32.LIB
+DEFS =  -D_CRT_SECURE_NO_DEPRECATE -DMECAB_USE_THREAD \
+        -DDLL_EXPORT -DHAVE_GETENV -DHAVE_WINDOWS_H -DDIC_VERSION=102 \
 ```
 
 ### mecab-pythonのビルド
@@ -115,7 +117,7 @@ py -3 setup.py bdist_wininst
 ### pythonライブラリのインストール
 windowsは[インストーラ](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip)があり、exeを叩けば勝手に入る。
 しかもMKLでビルドされているので高速。numpyやscipyはここから入れると良い。
-pipでも普通に入る。
+ビルドが必要なモノ以外はpipでも普通に入る。
 
 
 ## misawa-matcherの実行方法
