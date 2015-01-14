@@ -10,14 +10,14 @@ IDを入力すると、惚れさせ男子の名言を表示します。
 - https://github.com/june29/horesase-boys
 
 
-## misawa-matcher実行環境（Ubuntu 14.04, python3.4(64bit)）
+## misawa-matcher実行環境 - Ubuntu 14.04, python3.4(64bit)
 ### pythonのバージョンについて
 `python3`でpython3.xを起動。
 pipは`pip3`でpython3.xのpipが実行できる。
 
 ### 各種アプリのインストール
 mecabの辞書は必ずutf8を入れること。
-デフォルトはeuf-jpで、UnicodeDecodeErrorrを吐いて死ぬ。
+デフォルトはeuc-jpで、UnicodeDecodeErrorrを吐いて死ぬ。
 ↓でおｋ。
 ```sh
 sudo apt-get install python3.4
@@ -32,24 +32,24 @@ sudo apt-get install libmecab-dev
 sudo pip3 install nltk
 ```
 
-### mecabのpythonバインディングのインストール
+### mecab-pythonのインストール
 ```sh
 sudo pip install mecab-python3
 ```
 上記で無理なら、
 
 ```sh
-get https://mecab.googlecode.com/files/mecab-python-0.996.tar.gz
+wget https://mecab.googlecode.com/files/mecab-python-0.996.tar.gz
 tar -zxvf mecab-python-0.996.tar.gz
 cd mecab-python-0.996
 ```
 でsetup.pyを
-```python3
+```python
 def cmd2(str):  
     return string.split (cmd1(str))  
 ```
 から↓に修正。
-```python3
+```python
 def cmd2(str):  
     return cmd1(str).split()  
 ```
@@ -58,7 +58,7 @@ def cmd2(str):
 sudo pip3 install -e .
 ```
 
-## misawa-matcher実行環境（windows8.1, python3.4(64bit)）
+## misawa-matcher実行環境 - windows8.1, python3.4(64bit)
 [この記事](http://qiita.com/ykchat/items/97dd7be100bfa837b7c4)が参考になる。
 python64bitの場合、mecabのビルドが必要。
 
@@ -76,7 +76,7 @@ pipは各バージョンのインストールディレクトリにあり、
 
 ### MeCabビルド
 visual studioは2008でなくとも大丈夫（vs2012でもイケた）。
-vsのインストールディレクトリから直接batを叩き、ビルドする。
+vsのインストールディレクトリのbatを叩き、ビルドする。
 vs2012の場合は以下。
 ```bat
 C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\vcvarsx86_amd64.bat
@@ -121,7 +121,7 @@ windowsは[インストーラ](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip)�
 
 
 ## misawa-matcherの実行方法
-linux:`python3 matcher_main.py 'sentence'`
+linux:`python3 matcher_main.py 'sentence'`  
 windows:`py -3 matcher_main.py 'sentence'`
 
 事前にjsonを解析した結果を'meigenWords.bin'に保存している。
