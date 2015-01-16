@@ -15,27 +15,10 @@ mecabのpythonバインディングのインストールは次から(mac, linux)
 '''
 
 
-def main():
-
-    # pickleがなければ実行。時間がかかる
-    # make_pickle_from_json()
-    if not(os.path.exists('meigenWords.bin')):
-        mecab_func.update_misawa_json()
-
-    with open('meigenWords.bin', 'rb') as f:
-        try:
-            meigenWords = pickle.load(f)
-        except EOFError:
-            print('empty picke file...')
-
-    if len(sys.argv) <= 1:
-        tweet = '今日はいい天気ですね'
-        print(len(sys.argv))
-    else:
-        tweet = sys.argv[1]
-
+def search_misawa_with_masi(meigenWords, tweet):
+    '''tweetからMASI距離によりベストなミサワを探す関数
+    '''
     tweetWords = mecab_func.breakdown_into_validwords(tweet)
-
     min_r = 100.
     matched_inf = {}
     for meigen in meigenWords:
@@ -52,9 +35,40 @@ def main():
             matched_inf = meigen
 
     print("r = %f" % min_r)
-    print(matched_inf)
     print("tweetWords: %s" % tweetWords)
-    webbrowser.open(matched_inf['image'])
+    for k, v in matched_inf.items():
+        if k == 'body':
+            v = v.replace('\n', ' ')
+        print('%s: %s' % (k, v))
+    return(matched_inf['image'])
+
+
+def main():
+    # pickleがなければ実行。時間がかかる
+    # make_pickle_from_json()
+    if not(os.path.exists('meigenWords.bin')):
+        mecab_func.update_misawa_json()
+
+    with open('meigenWords.bin', 'rb') as f:
+        try:
+            meigenWords = pickle.load(f)
+        except EOFError:
+            print('empty picke file...')
+
+    # 引数を受け取らない場合、対話的に実行
+    if len(sys.argv) == 1:
+        print("press 'q' to quit...")
+        tweet = ''
+        while True:
+            tweet = input("input tweet> ")
+            if tweet == 'q':
+                break
+            elif tweet == '':
+                continue
+            search_misawa_with_masi(meigenWords, tweet)
+            print('\n')
+    else:
+        webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
 
 if __name__ == '__main__':
     main()
