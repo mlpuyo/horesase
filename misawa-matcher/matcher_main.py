@@ -43,6 +43,34 @@ def search_misawa_with_masi(meigenWords, tweet):
     return(matched_inf['image'])
 
 
+def search_misawa_with_masi2(meigenWords, tweet):
+    '''突貫工事でもろもろreturnするよう変更
+    '''
+    tweetWords = mecab_func.breakdown_into_validwords(tweet)
+    min_r = 100.
+    matched_inf = {}
+    for meigen in meigenWords:
+        words = meigen['words']
+
+        # Jaccard距離による類似度判定。小さいほど類似
+        # r = nltk.metrics.distance.jaccard_distance(set(tweetWords), set(words))
+
+        # MASI距離による類似度判定。小さいほど類似
+        r = masi_distance(set(tweetWords), set(words))
+
+        if r < min_r:
+            min_r = r
+            matched_inf = meigen
+
+    print("r = %f" % min_r)
+    # print("tweetWords: %s" % tweetWords)
+    # for k, v in matched_inf.items():
+    #     if k == 'body':
+    #         v = v.replace('\n', ' ')
+    #     print('%s: %s' % (k, v))
+    return(min_r, matched_inf)
+
+
 def main():
     # pickleがなければ実行。時間がかかる
     # make_pickle_from_json()
