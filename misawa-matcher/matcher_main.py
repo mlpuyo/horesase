@@ -57,17 +57,15 @@ def search_misawa_with_masi2(meigenWords, tweet):
 
         # MASI距離による類似度判定。小さいほど類似
         r = masi_distance(set(tweetWords), set(words))
-
         if r < min_r:
             min_r = r
             matched_inf = meigen
-
     print("r = %f" % min_r)
     # print("tweetWords: %s" % tweetWords)
     # for k, v in matched_inf.items():
-    #     if k == 'body':
-    #         v = v.replace('\n', ' ')
-    #     print('%s: %s' % (k, v))
+    # if k == 'body':
+    # v = v.replace('\n', ' ')
+    # print('%s: %s' % (k, v))
     return(min_r, matched_inf)
 
 
