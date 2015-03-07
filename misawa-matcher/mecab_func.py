@@ -10,63 +10,6 @@ import urllib.request
 from subprocess import Popen, PIPE
 
 
-def breakdown_into_validwords2(sentence):
-    '''mecabを使って形態素解析
-    pythonバインディングを利用しないバージョン
-    環境による文字コードとmecab辞書の文字コードの組み合わせで扱いが面倒
-    廃止予定
-    '''
-    ret_list = []
-
-    if sentence == '' or not(isinstance(sentence, str)):
-        return ret_list
-
-    sentence = sentence.replace("\n", "")
-
-    with open('.input.txt', 'w') as f:
-        # 適当な例外処理
-        try:
-            f.write(sentence)
-        except:
-            return ret_list
-
-    # 無理やりmecabで処理
-    p = Popen(["mecab", "-Ochasen", ".input.txt"], stdout=PIPE)
-    while 1:
-        line = p.stdout.readline()[:-1]
-        try:
-            if os.name == 'nt':
-                line = line.decode('cp932')
-            else:
-                line = line.decode('utf-8')
-        except UnicodeDecodeError:
-            print('文字エラー')
-            print('breakdown_into_validwordsを利用してちょ')
-
-        if line[:3] == "EOS":
-            break
-        if not line:
-            continue
-
-        line = line.split('\t')
-        word = line[2]
-
-        # 漢字でない一文字のwordは無視
-        # 'ー'や'*'も同様
-        if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
-            continue
-        # 二文字のひらがなは無視
-        if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
-                and unicodedata.name(word[1])[0:4] == 'HIRA'):
-            continue
-        if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
-                or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
-            ret_list.append(word)
-
-    p.wait()
-    return ret_list
-
-
 def breakdown_into_validwords(sentence):
     '''mecabを使って形態素解析
     pythonバインディングを利用
