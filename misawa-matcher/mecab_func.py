@@ -8,15 +8,22 @@ import unicodedata
 import MeCab
 import urllib.request
 from subprocess import Popen, PIPE
+from datetime import datetime
 
 
 def breakdown_into_validwords(sentence):
-    '''mecabを使って形態素解析
-    pythonバインディングを利用
-    '''
+    """
+    与えられた文章(文字列)を形態素解析してリスト返却します
+    - 入出力例
+    -   IN:  "今日はいい天気ですね"
+    -   OUT: ['今日', '天気']
+    """
     ret_list = []
 
     if sentence == '' or not(isinstance(sentence, str)):
+        """
+        TODO: 例外処理
+        """
         return ret_list
 
     sentence = sentence.replace("\n", "")
@@ -47,9 +54,11 @@ def breakdown_into_validwords(sentence):
 
 
 def make_pickle_from_json(fn='../meigens.json'):
-    '''meigens.jsonを形態素解析
-    辞書型の配列を作成・pickle保存
-    '''
+    """"
+    名言辞書の形態素解析
+    - 辞書型の配列を作成
+    - pickle保存
+    """
     print("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
@@ -81,8 +90,17 @@ def make_pickle_from_json(fn='../meigens.json'):
         for data in meigenData:
             writer.writerow(data["words"])
 
+    print("pickels updated. meigen count:[%s]" % len(meigenData))
 
-def update_misawa_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
+
+def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
+    """
+    名言辞書を最新化します
+    - 名言辞書をURLもしくはローカルから取得
+    - 名言辞書の形態素解析
+    """
+
+    # 名言辞書の更新
     try:
         print("downloading json...")
         r = urllib.request.urlopen(url)
@@ -92,15 +110,28 @@ def update_misawa_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
     with open("meigens.json", "wb") as f:
         f.write(r.read())
 
+    ts = os.stat("meigens.json").st_mtime
+    print("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
+
+    # デシリアライズと形態素解析
     make_pickle_from_json('meigens.json')
 
 
-def main():
-    # testSentence = '今日はいい天気ですね'
-    # print(breakdown_into_validwords(testSentence))
-    # print(breakdown_into_validwords2(testSentence))
-    update_misawa_json()
+def test_func_1(sentence):
+    print("input: [%s]" % sentence)
+    print("output:[%s]" % breakdown_into_validwords(sentence))
+
+
+def test_func_2():
+    update_json()
 
 
 if __name__ == '__main__':
-    main()
+    """
+    単独実行時の処理
+    - テストしたい処理を記述する
+    """
+    #test_func_1('今日はいい天気ですね')
+    test_func_2();
+
+
