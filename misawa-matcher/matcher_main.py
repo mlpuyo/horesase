@@ -15,40 +15,12 @@ mecabのpythonバインディングのインストールは次から(mac, linux)
 '''
 
 
-def search_misawa_with_masi(meigenWords, tweet):
+def search_misawa_with_masi(meigenWords, targetSentence):
     '''tweetからMASI距離によりベストなミサワを探す関数
     '''
-    tweetWords = mecab_func.breakdown_into_validwords(tweet)
-    min_r = 100.
-    matched_inf = {}
-    for meigen in meigenWords:
-        words = meigen['words']
-
-        # Jaccard距離による類似度判定。小さいほど類似
-        # r = nltk.metrics.distance.jaccard_distance(set(tweetWords), set(words))
-
-        # MASI距離による類似度判定。小さいほど類似
-        r = masi_distance(set(tweetWords), set(words))
-
-        if r < min_r:
-            min_r = r
-            matched_inf = meigen
-	# 結果表示
-    print("\n")
-    print("meigens\n %s" % meigenWords.length)
-    print("\tr = %f" % min_r)
-    print("\ttweetWords: %s" % tweetWords)
-    for k, v in matched_inf.items():
-        if k == 'body':
-            v = v.replace('\n', ' ')
-        print('\t%s: %s' % (k, v))
-    return(matched_inf['image'])
-
-
-def search_misawa_with_masi2(store, sentence):
-    '''tweetからMASI距離によりベストなミサワを探す関数 - 改善版
-    '''
-    targetWords = mecab_func.breakdown_into_validwords(sentence)
+    targetWords = mecab_func.breakdown_into_validwords(targetSentence)
+    #targetWords = mecab_func.breakdown_into_validwords("ありがとう、郵便局。良い天気です")
+    #targetWords = mecab_func.breakdown_into_validwords2(targetSentence)
     min_r = 100.
     matched_inf = {}
     for meigen in meigenWords:
@@ -59,16 +31,30 @@ def search_misawa_with_masi2(store, sentence):
 
         # MASI距離による類似度判定。小さいほど類似
         r = masi_distance(set(targetWords), set(words))
+
         if r < min_r:
             min_r = r
             matched_inf = meigen
-    print("r = %f" % min_r)
-    # print("tweetWords: %s" % tweetWords)
-    # for k, v in matched_inf.items():
-    # if k == 'body':
-    # v = v.replace('\n', ' ')
-    # print('%s: %s' % (k, v))
-    return(min_r, matched_inf)
+
+	# 結果表示
+    print("")
+    print("meigens count: %s" % len(meigenWords))
+    print("input: \"%s\"" % targetSentence)
+    if len(targetWords) == 0:
+        print("no breakdown with MeCab")
+        return
+    print("input_breakdown: %s" % targetWords)
+
+    # 解析結果
+    print("")
+    print("selected meigen [r = %f]:" % min_r)
+    for k, v in matched_inf.items():
+        if k == 'body':
+            v = v.replace('\n', ' ')
+        print('\t%s: %s' % (k, v))
+    print("")
+
+    return(matched_inf['image'])
 
 
 def main():
@@ -95,7 +81,6 @@ def main():
             elif sentence == '':
                 continue
             search_misawa_with_masi(meigenWords, sentence)
-            print('\n')
     else:
     	# ウェブブラウザで画像を表示
         # webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
