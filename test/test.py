@@ -4,6 +4,12 @@ import MeCab
 import sys
 import string
 
+'''
+Usage: python test.py
+- pythonからMeCabを実行するテスト
+- 結果が文字化けしないことを確認すること
+'''
+
 # sentence = "太郎はこの本を二郎を見た女性に渡した。\nとみせかけて渡していなかった。"
 sentence = "今日はいい天気ですね"
 

@@ -123,6 +123,7 @@ windowsは[インストーラ](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip)�
 ## misawa-matcherの実行方法
 linux:`python3 matcher_main.py 'sentence'`  
 windows:`py -3 matcher_main.py 'sentence'`
+mac: `python matcher_main.py 'sentence'`
 
 事前にjsonを解析した結果を'meigenWords.bin'に保存している。
 初回実行時など'meigenWords.bin'がない場合、

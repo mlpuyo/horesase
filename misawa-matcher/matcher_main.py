@@ -1,4 +1,4 @@
-#! py -3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -33,20 +33,22 @@ def search_misawa_with_masi(meigenWords, tweet):
         if r < min_r:
             min_r = r
             matched_inf = meigen
-
-    print("r = %f" % min_r)
-    print("tweetWords: %s" % tweetWords)
+	# 結果表示
+    print("\n")
+    print("meigens\n %s" % meigenWords.length)
+    print("\tr = %f" % min_r)
+    print("\ttweetWords: %s" % tweetWords)
     for k, v in matched_inf.items():
         if k == 'body':
             v = v.replace('\n', ' ')
-        print('%s: %s' % (k, v))
+        print('\t%s: %s' % (k, v))
     return(matched_inf['image'])
 
 
-def search_misawa_with_masi2(meigenWords, tweet):
-    '''突貫工事でもろもろreturnするよう変更
+def search_misawa_with_masi2(store, sentence):
+    '''tweetからMASI距離によりベストなミサワを探す関数 - 改善版
     '''
-    tweetWords = mecab_func.breakdown_into_validwords(tweet)
+    targetWords = mecab_func.breakdown_into_validwords(sentence)
     min_r = 100.
     matched_inf = {}
     for meigen in meigenWords:
@@ -56,7 +58,7 @@ def search_misawa_with_masi2(meigenWords, tweet):
         # r = nltk.metrics.distance.jaccard_distance(set(tweetWords), set(words))
 
         # MASI距離による類似度判定。小さいほど類似
-        r = masi_distance(set(tweetWords), set(words))
+        r = masi_distance(set(targetWords), set(words))
         if r < min_r:
             min_r = r
             matched_inf = meigen
@@ -82,19 +84,23 @@ def main():
             print('empty picke file...')
 
     # 引数を受け取らない場合、対話的に実行
-    if len(sys.argv) == 1:
+    if len(sys.argv) < 2:
+        print("")
         print("press 'q' to quit...")
-        tweet = ''
+        sentence = ''
         while True:
-            tweet = input("input tweet> ")
-            if tweet == 'q':
+            sentence = input("input sentence> ")
+            if sentence == 'q':
                 break
-            elif tweet == '':
+            elif sentence == '':
                 continue
-            search_misawa_with_masi(meigenWords, tweet)
+            search_misawa_with_masi(meigenWords, sentence)
             print('\n')
     else:
-        webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
+    	# ウェブブラウザで画像を表示
+        # webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
+        search_misawa_with_masi(meigenWords, sys.argv[1])
+
 
 if __name__ == '__main__':
     main()
