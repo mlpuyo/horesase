@@ -1,18 +1,26 @@
-#! py -3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys, pickle, urllib, shutil, datetime
 import tweepy, MeCab
 import mecab_func, matcher_main
 import key
 
-def authenticate():
+'''
+matcher_main.pyを利用してTwitterAPIを叩く
+'''
+
+def api_authenticate():
+    ''' API認証
+    '''
     auth = tweepy.OAuthHandler(key.CONSUMER_KEY, key.CONSUMER_SECRET)
     auth.set_access_token(key.OAUTH_TOKEN, key.OAUTH_SECRET)
 
     return tweepy.API(auth)
 
 
-def search_user(api): 
+def api_search_user(api):
+    '''　ユーザ検索
+    '''
     at_name = '@' + key.BOT_NAME
     candidate_tweets = api.search(q=at_name)
     user_list = []
@@ -49,7 +57,10 @@ def search_user(api):
 
 
 def get_user_text(api, user, meigenWords):
-    '''とりあえず10件ほど取得
+    '''　
+    任意ユーザの直近ツイート10件を取得し、
+    その中からベストマッチの名言を導出して返却する.
+    ※10件というのはとりあえずの値
     '''
     user_tweets = api.user_timeline(id=user, count=10)
     minr = 999
@@ -79,8 +90,9 @@ def get_user_text(api, user, meigenWords):
     return user_tweets[target_index]
 
 def main():
-    '''色々準備
     '''
+    '''
+    # 色々準備
     if not(os.path.exists('meigenWords.bin')):
         mecab_func.update_misawa_json()
 
@@ -89,12 +101,15 @@ def main():
             meigenWords = pickle.load(f)
         except EOFError:
             print('empty pickle file...')
-
-    api = authenticate()
-    user_list = search_user(api)
+    
+    #　Twitter利用
+    api = api_authenticate()
+    user_list = api_search_user_with_name(api)
     
     for user in user_list:
         user_tweet = get_user_text(api,user,meigenWords)
+
+        # 名言のURLを取得	
         pic_url = matcher_main.search_misawa_with_masi(meigenWords, user_tweet.text)
         
         '''もっとスマートに画像を貼っつける方法があったら知りたい

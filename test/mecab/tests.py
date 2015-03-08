@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-import MeCab
 import sys
 import string
+import MeCab
 
 """
 Usage: python test.py

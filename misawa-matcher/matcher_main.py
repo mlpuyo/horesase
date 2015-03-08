@@ -8,22 +8,32 @@ import mecab_func
 # nltkはロードが遅い
 from nltk.metrics.distance import masi_distance
 
-'''
+"""
 コマンドライン引数から読み込んだ文章で類似度検索
 mecabのpythonバインディングのインストールは次から(mac, linux)
 ※気が向く限りPEP8に則る
-'''
+"""
 
-
-def search_misawa_with_masi(meigenWords, targetSentence):
-    '''tweetからMASI距離によりベストなミサワを探す関数
-    '''
+def search_misawa_with_masi(meigens, targetSentence):
+    """
+    MASI距離によりベストなミサワを探す関数
+    - IN  : 名言リスト、解析対象文章
+    - OUT : 画像のURL
+    """
     targetWords = mecab_func.breakdown_into_validwords(targetSentence)
-    #targetWords = mecab_func.breakdown_into_validwords("ありがとう、郵便局。良い天気です")
-    #targetWords = mecab_func.breakdown_into_validwords2(targetSentence)
-    min_r = 100.
+    
+    if len(targetWords) == 0:
+        print("解析ができないよ. 文章を入れてね")
+        return(1)
+
+    # 入力された文章で解析可能な場合
+    hit = False
+    min_r = 1.0
     matched_inf = {}
-    for meigen in meigenWords:
+    cnt = 0
+
+    for meigen in meigens:
+
         words = meigen['words']
 
         # Jaccard距離による類似度判定。小さいほど類似
@@ -31,21 +41,28 @@ def search_misawa_with_masi(meigenWords, targetSentence):
 
         # MASI距離による類似度判定。小さいほど類似
         r = masi_distance(set(targetWords), set(words))
+        #print("%s dist:%s [%s] [%s]" % (cnt, r, targetSentence, meigen))
+        print("%s dist:[%s] [%s] [%s]" % (cnt, r, targetWords, words))
 
         if r < min_r:
+            hit = True
             min_r = r
             matched_inf = meigen
 
-	# 結果表示
+        cnt = cnt + 1
+
+    # 例外: すべての名言との距離が 1.0  
+    if not hit:
+        print("ベストマッチなし\n")
+        return (1)
+    
+    # レポート
     print("")
-    print("meigens count: %s" % len(meigenWords))
-    print("input: \"%s\"" % targetSentence)
-    if len(targetWords) == 0:
-        print("no breakdown with MeCab")
-        return
+    print("meigens count: %s" % len(meigens))
+    print("input: [%s]" % targetSentence)
     print("input_breakdown: %s" % targetWords)
 
-    # 解析結果
+    # 抽出された名言
     print("")
     print("selected meigen [r = %f]:" % min_r)
     for k, v in matched_inf.items():
@@ -54,6 +71,7 @@ def search_misawa_with_masi(meigenWords, targetSentence):
         print('\t%s: %s' % (k, v))
     print("")
 
+    # 戻り値: 画像のURL
     return(matched_inf['image'])
 
 
@@ -65,14 +83,13 @@ def main():
 
     with open('meigenWords.bin', 'rb') as f:
         try:
-            meigenWords = pickle.load(f)
+            meigens = pickle.load(f)
         except EOFError:
             print('empty picke file...')
 
     # 引数を受け取らない場合、対話的に実行
     if len(sys.argv) < 2:
-        print("")
-        print("press 'q' to quit...")
+        print("\npress 'q' to quit...")
         sentence = ''
         while True:
             sentence = input("input sentence> ")
@@ -80,11 +97,12 @@ def main():
                 break
             elif sentence == '':
                 continue
-            search_misawa_with_masi(meigenWords, sentence)
+            search_misawa_with_masi(meigens, sentence)
     else:
     	# ウェブブラウザで画像を表示
+        # TODO: ウェブブラウザへの表示は、botとの兼ね合いも含めて検討
         # webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
-        search_misawa_with_masi(meigenWords, sys.argv[1])
+        search_misawa_with_masi(meigens, sys.argv[1])
 
 
 if __name__ == '__main__':
