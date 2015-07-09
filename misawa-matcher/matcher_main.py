@@ -1,4 +1,4 @@
-#! py -3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -8,65 +8,71 @@ import mecab_func
 # nltkはロードが遅い
 from nltk.metrics.distance import masi_distance
 
-'''
+"""
 コマンドライン引数から読み込んだ文章で類似度検索
 mecabのpythonバインディングのインストールは次から(mac, linux)
 ※気が向く限りPEP8に則る
-'''
+"""
 
+def search_misawa_with_masi(meigens, targetSentence):
+    """
+    MASI距離によりベストなミサワを探す関数
+    - IN  : 名言リスト、解析対象文章
+    - OUT : 画像のURL
+    """
+    targetWords = mecab_func.breakdown_into_validwords(targetSentence)
+    
+    if len(targetWords) == 0:
+        print("解析ができないよ. 文章を入れてね")
+        return(1)
 
-def search_misawa_with_masi(meigenWords, tweet):
-    '''tweetからMASI距離によりベストなミサワを探す関数
-    '''
-    tweetWords = mecab_func.breakdown_into_validwords(tweet)
-    min_r = 100.
+    # 入力された文章で解析可能な場合
+    hit = False
+    min_r = 1.0
     matched_inf = {}
-    for meigen in meigenWords:
+    cnt = 0
+
+    for meigen in meigens:
+
         words = meigen['words']
 
         # Jaccard距離による類似度判定。小さいほど類似
         # r = nltk.metrics.distance.jaccard_distance(set(tweetWords), set(words))
 
         # MASI距離による類似度判定。小さいほど類似
-        r = masi_distance(set(tweetWords), set(words))
+        r = masi_distance(set(targetWords), set(words))
+        #print("%s dist:%s [%s] [%s]" % (cnt, r, targetSentence, meigen))
+        print("%s dist:[%s] [%s] [%s]" % (cnt, r, targetWords, words))
 
         if r < min_r:
+            hit = True
             min_r = r
             matched_inf = meigen
 
-    print("r = %f" % min_r)
-    print("tweetWords: %s" % tweetWords)
+        cnt = cnt + 1
+
+    # 例外: すべての名言との距離が 1.0  
+    if not hit:
+        print("ベストマッチなし\n")
+        return (1)
+    
+    # レポート
+    print("")
+    print("meigens count: %s" % len(meigens))
+    print("input: [%s]" % targetSentence)
+    print("input_breakdown: %s" % targetWords)
+
+    # 抽出された名言
+    print("")
+    print("selected meigen [r = %f]:" % min_r)
     for k, v in matched_inf.items():
         if k == 'body':
             v = v.replace('\n', ' ')
-        print('%s: %s' % (k, v))
+        print('\t%s: %s' % (k, v))
+    print("")
+
+    # 戻り値: 画像のURL
     return(matched_inf['image'])
-
-
-def search_misawa_with_masi2(meigenWords, tweet):
-    '''突貫工事でもろもろreturnするよう変更
-    '''
-    tweetWords = mecab_func.breakdown_into_validwords(tweet)
-    min_r = 100.
-    matched_inf = {}
-    for meigen in meigenWords:
-        words = meigen['words']
-
-        # Jaccard距離による類似度判定。小さいほど類似
-        # r = nltk.metrics.distance.jaccard_distance(set(tweetWords), set(words))
-
-        # MASI距離による類似度判定。小さいほど類似
-        r = masi_distance(set(tweetWords), set(words))
-        if r < min_r:
-            min_r = r
-            matched_inf = meigen
-    print("r = %f" % min_r)
-    # print("tweetWords: %s" % tweetWords)
-    # for k, v in matched_inf.items():
-    # if k == 'body':
-    # v = v.replace('\n', ' ')
-    # print('%s: %s' % (k, v))
-    return(min_r, matched_inf)
 
 
 def main():
@@ -77,24 +83,27 @@ def main():
 
     with open('meigenWords.bin', 'rb') as f:
         try:
-            meigenWords = pickle.load(f)
+            meigens = pickle.load(f)
         except EOFError:
             print('empty picke file...')
 
     # 引数を受け取らない場合、対話的に実行
-    if len(sys.argv) == 1:
-        print("press 'q' to quit...")
-        tweet = ''
+    if len(sys.argv) < 2:
+        print("\npress 'q' to quit...")
+        sentence = ''
         while True:
-            tweet = input("input tweet> ")
-            if tweet == 'q':
+            sentence = input("input sentence> ")
+            if sentence == 'q':
                 break
-            elif tweet == '':
+            elif sentence == '':
                 continue
-            search_misawa_with_masi(meigenWords, tweet)
-            print('\n')
+            search_misawa_with_masi(meigens, sentence)
     else:
-        webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
+    	# ウェブブラウザで画像を表示
+        # TODO: ウェブブラウザへの表示は、botとの兼ね合いも含めて検討
+        # webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
+        search_misawa_with_masi(meigens, sys.argv[1])
+
 
 if __name__ == '__main__':
     main()

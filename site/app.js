@@ -72,12 +72,13 @@ function show(entry){
 var db;
 
 function loadDb(){
-
+alert("1");
 //	$.get("data/dummy.json", function(data){ 		// dummy data
-	$.get("data/meigens_f.json", function(data){ 	// full data, formated
+	$.get("public/data/meigens_f.json", function(data){ 	// full data, formated
 		db = $.parseJSON(data); 
+alert("2");
 	});
-
+alert("3");
 }
 
 function padSpace(targetStr, times ) {

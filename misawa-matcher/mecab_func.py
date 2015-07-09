@@ -1,4 +1,4 @@
-#! py -3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
 import os
@@ -8,72 +8,22 @@ import unicodedata
 import MeCab
 import urllib.request
 from subprocess import Popen, PIPE
-
-
-def breakdown_into_validwords2(sentence):
-    '''mecabを使って形態素解析
-    pythonバインディングを利用しないバージョン
-    環境による文字コードとmecab辞書の文字コードの組み合わせで扱いが面倒
-    廃止予定
-    '''
-    ret_list = []
-
-    if sentence == '' or not(isinstance(sentence, str)):
-        return ret_list
-
-    sentence = sentence.replace("\n", "")
-
-    with open('.input.txt', 'w') as f:
-        # 適当な例外処理
-        try:
-            f.write(sentence)
-        except:
-            return ret_list
-
-    # 無理やりmecabで処理
-    p = Popen(["mecab", "-Ochasen", ".input.txt"], stdout=PIPE)
-    while 1:
-        line = p.stdout.readline()[:-1]
-        try:
-            if os.name == 'nt':
-                line = line.decode('cp932')
-            else:
-                line = line.decode('utf-8')
-        except UnicodeDecodeError:
-            print('文字エラー')
-            print('breakdown_into_validwordsを利用してちょ')
-
-        if line[:3] == "EOS":
-            break
-        if not line:
-            continue
-
-        line = line.split('\t')
-        word = line[2]
-
-        # 漢字でない一文字のwordは無視
-        # 'ー'や'*'も同様
-        if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
-            continue
-        # 二文字のひらがなは無視
-        if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
-                and unicodedata.name(word[1])[0:4] == 'HIRA'):
-            continue
-        if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
-                or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
-            ret_list.append(word)
-
-    p.wait()
-    return ret_list
+from datetime import datetime
 
 
 def breakdown_into_validwords(sentence):
-    '''mecabを使って形態素解析
-    pythonバインディングを利用
-    '''
+    """
+    与えられた文章(文字列)を形態素解析してリスト返却します
+    - 入出力例
+    -   IN:  "今日はいい天気ですね"
+    -   OUT: ['今日', '天気']
+    """
     ret_list = []
 
     if sentence == '' or not(isinstance(sentence, str)):
+        """
+        TODO: 例外処理
+        """
         return ret_list
 
     sentence = sentence.replace("\n", "")
@@ -104,9 +54,11 @@ def breakdown_into_validwords(sentence):
 
 
 def make_pickle_from_json(fn='../meigens.json'):
-    '''meigens.jsonを形態素解析
-    辞書型の配列を作成・pickle保存
-    '''
+    """"
+    名言辞書の形態素解析
+    - 辞書型の配列を作成
+    - pickle保存
+    """
     print("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
@@ -138,8 +90,17 @@ def make_pickle_from_json(fn='../meigens.json'):
         for data in meigenData:
             writer.writerow(data["words"])
 
+    print("pickels updated. meigen count:[%s]" % len(meigenData))
 
-def update_misawa_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
+
+def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
+    """
+    名言辞書を最新化します
+    - 名言辞書をURLもしくはローカルから取得
+    - 名言辞書の形態素解析
+    """
+
+    # 名言辞書の更新
     try:
         print("downloading json...")
         r = urllib.request.urlopen(url)
@@ -149,15 +110,28 @@ def update_misawa_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
     with open("meigens.json", "wb") as f:
         f.write(r.read())
 
+    ts = os.stat("meigens.json").st_mtime
+    print("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
+
+    # デシリアライズと形態素解析
     make_pickle_from_json('meigens.json')
 
 
-def main():
-    # testSentence = '今日はいい天気ですね'
-    # print(breakdown_into_validwords(testSentence))
-    # print(breakdown_into_validwords2(testSentence))
-    update_misawa_json()
+def test_func_1(sentence):
+    print("input: [%s]" % sentence)
+    print("output:[%s]" % breakdown_into_validwords(sentence))
+
+
+def test_func_2():
+    update_json()
 
 
 if __name__ == '__main__':
-    main()
+    """
+    単独実行時の処理
+    - テストしたい処理を記述する
+    """
+    #test_func_1('今日はいい天気ですね')
+    test_func_2();
+
+

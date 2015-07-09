@@ -1,8 +1,15 @@
-#! py -3
-# -*- coding: utf-8 -*-
-import MeCab
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-import MeCab
 import sys
 import string
+import MeCab
+
+"""
+Usage: python test.py
+- pythonからMeCabを実行するテスト
+- MeCab/MeCab Python-bindingがインストールされていれば、エラーなく実行される
+- MeCab辞書が正しくインストールされていれば、文字化けせず結果が出力される
+"""
 
 # sentence = "太郎はこの本を二郎を見た女性に渡した。\nとみせかけて渡していなかった。"
 sentence = "今日はいい天気ですね"
