@@ -58,25 +58,24 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
         else:
             return (1.)
     
-    # レポート
-    print("")
-    print("meigens count: %s" % len(meigens))
-    print("input: [%s]" % targetSentence)
-    print("input_breakdown: %s" % targetWords)
-
-    # 抽出された名言
-    print("")
-    print("selected meigen [r = %f]:" % minr)
-    for k, v in matched_inf.items():
-        if k == 'body':
-            v = v.replace('\n', ' ')
-        print('\t%s: %s' % (k, v))
-    print("")
-
     if retMasiR:
         # 戻り値: MASI距離, 全ミサワ情報
         return minr, matched_inf['image']
     else:
+        # レポート
+        print("")
+        print("meigens count: %s" % len(meigens))
+        print("input: [%s]" % targetSentence)
+        print("input_breakdown: %s" % targetWords)
+
+        # 抽出された名言
+        print("")
+        print("selected meigen [r = %f]:" % minr)
+        for k, v in matched_inf.items():
+            if k == 'body':
+                v = v.replace('\n', ' ')
+            print('\t%s: %s' % (k, v))
+        print("")
         # 戻り値: 画像のURL
         return(matched_inf['image'])
 
