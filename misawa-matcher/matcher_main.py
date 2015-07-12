@@ -10,11 +10,10 @@ from nltk.metrics.distance import masi_distance
 
 """
 コマンドライン引数から読み込んだ文章で類似度検索
-mecabのpythonバインディングのインストールは次から(mac, linux)
 ※気が向く限りPEP8に則る
 """
 
-def search_misawa_with_masi(meigens, targetSentence):
+def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
     """
     MASI距離によりベストなミサワを探す関数
     - IN  : 名言リスト、解析対象文章
@@ -28,7 +27,7 @@ def search_misawa_with_masi(meigens, targetSentence):
 
     # 入力された文章で解析可能な場合
     hit = False
-    min_r = 1.0
+    minr = 1.0
     matched_inf = {}
     cnt = 0
 
@@ -41,12 +40,12 @@ def search_misawa_with_masi(meigens, targetSentence):
 
         # MASI距離による類似度判定。小さいほど類似
         r = masi_distance(set(targetWords), set(words))
-        #print("%s dist:%s [%s] [%s]" % (cnt, r, targetSentence, meigen))
-        print("%s dist:[%s] [%s] [%s]" % (cnt, r, targetWords, words))
+        # print("%s dist:%s [%s] [%s]" % (cnt, r, targetSentence, meigen))
+        # print("%s dist:[%s] [%s] [%s]" % (cnt, r, targetWords, words))
 
-        if r < min_r:
+        if r < minr:
             hit = True
-            min_r = r
+            minr = r
             matched_inf = meigen
 
         cnt = cnt + 1
@@ -54,7 +53,10 @@ def search_misawa_with_masi(meigens, targetSentence):
     # 例外: すべての名言との距離が 1.0  
     if not hit:
         print("ベストマッチなし\n")
-        return (1)
+        if retMasiR:
+            return 1., "no_image"
+        else:
+            return (1.)
     
     # レポート
     print("")
@@ -64,15 +66,19 @@ def search_misawa_with_masi(meigens, targetSentence):
 
     # 抽出された名言
     print("")
-    print("selected meigen [r = %f]:" % min_r)
+    print("selected meigen [r = %f]:" % minr)
     for k, v in matched_inf.items():
         if k == 'body':
             v = v.replace('\n', ' ')
         print('\t%s: %s' % (k, v))
     print("")
 
-    # 戻り値: 画像のURL
-    return(matched_inf['image'])
+    if retMasiR:
+        # 戻り値: MASI距離, 全ミサワ情報
+        return minr, matched_inf['image']
+    else:
+        # 戻り値: 画像のURL
+        return(matched_inf['image'])
 
 
 def main():
@@ -99,7 +105,7 @@ def main():
                 continue
             search_misawa_with_masi(meigens, sentence)
     else:
-    	# ウェブブラウザで画像を表示
+        # ウェブブラウザで画像を表示
         # TODO: ウェブブラウザへの表示は、botとの兼ね合いも含めて検討
         # webbrowser.open(search_misawa_with_masi(meigenWords, sys.argv[1]))
         search_misawa_with_masi(meigens, sys.argv[1])
