@@ -9,6 +9,8 @@ import MeCab
 import urllib.request
 from subprocess import Popen, PIPE
 from datetime import datetime
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 def breakdown_into_validwords(sentence):
@@ -59,7 +61,7 @@ def make_pickle_from_json(fn='../meigens.json'):
     - 辞書型の配列を作成
     - pickle保存
     """
-    print("making pickels...")
+    logging.info("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
 
@@ -80,7 +82,7 @@ def make_pickle_from_json(fn='../meigens.json'):
         data['words'] = words
         meigenData.append(data)
         if data['id'] % 50 == 0:
-            print('id = %d' % data['id'])
+            logging.info('id = %d' % data['id'])
 
     with open('meigenWords.bin', 'wb') as f:
         pickle.dump(meigenData, f)
@@ -90,7 +92,7 @@ def make_pickle_from_json(fn='../meigens.json'):
         for data in meigenData:
             writer.writerow(data["words"])
 
-    print("pickels updated. meigen count:[%s]" % len(meigenData))
+    logging.info("pickels updated. meigen count:[%s]" % len(meigenData))
 
 
 def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
@@ -102,24 +104,24 @@ def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
 
     # 名言辞書の更新
     try:
-        print("downloading json...")
+        logging.info("downloading json...")
         r = urllib.request.urlopen(url)
     except:
-        print('Could not download json\nCheck Internet Connetcion...')
+        logging.error('Could not download json\nCheck Internet Connetcion...')
         return
     with open("meigens.json", "wb") as f:
         f.write(r.read())
 
     ts = os.stat("meigens.json").st_mtime
-    print("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
+    logging.info("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
 
     # デシリアライズと形態素解析
     make_pickle_from_json('meigens.json')
 
 
 def test_func_1(sentence):
-    print("input: [%s]" % sentence)
-    print("output:[%s]" % breakdown_into_validwords(sentence))
+    logging.info("input: [%s]" % sentence)
+    logging.info("output:[%s]" % breakdown_into_validwords(sentence))
 
 
 def test_func_2():

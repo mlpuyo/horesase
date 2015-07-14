@@ -7,6 +7,8 @@ import webbrowser
 import mecab_func
 # nltkはロードが遅い
 from nltk.metrics.distance import masi_distance
+from logging import getLogger
+logger = getLogger(__name__)
 
 """
 コマンドライン引数から読み込んだ文章で類似度検索
@@ -22,7 +24,7 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
     targetWords = mecab_func.breakdown_into_validwords(targetSentence)
     
     if len(targetWords) == 0:
-        print("解析ができないよ. 文章を入れてね")
+        logger.error("解析ができないよ. 文章を入れてね")
         return(1)
 
     # 入力された文章で解析可能な場合
@@ -52,7 +54,7 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
 
     # 例外: すべての名言との距離が 1.0  
     if not hit:
-        print("ベストマッチなし\n")
+        logger.info("ベストマッチなし\n")
         if retMasiR:
             return 1., "no_image"
         else:
@@ -63,19 +65,19 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
         return minr, matched_inf['image']
     else:
         # レポート
-        print("")
-        print("meigens count: %s" % len(meigens))
-        print("input: [%s]" % targetSentence)
-        print("input_breakdown: %s" % targetWords)
+        logger.info("========masi calculation profile========")
+        logger.info("meigens count: %s" % len(meigens))
+        logger.info("input: [%s]" % targetSentence)
+        logger.info("input_breakdown: %s" % targetWords)
 
         # 抽出された名言
-        print("")
-        print("selected meigen [r = %f]:" % minr)
+        logger.info("")
+        logger.info("selected meigen [r = %f]:" % minr)
         for k, v in matched_inf.items():
             if k == 'body':
                 v = v.replace('\n', ' ')
-            print('\t%s: %s' % (k, v))
-        print("")
+            logger.info('\t%s: %s' % (k, v))
+        logger.info("================\n\n")
         # 戻り値: 画像のURL
         return(matched_inf['image'])
 
@@ -89,8 +91,8 @@ def main():
     with open('meigenWords.bin', 'rb') as f:
         try:
             meigens = pickle.load(f)
-        except EOFError:
-            print('empty picke file...')
+        except:
+            logger.error('empty pickle file', exec_info=True)
 
     # 引数を受け取らない場合、対話的に実行
     if len(sys.argv) < 2:

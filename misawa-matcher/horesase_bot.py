@@ -7,10 +7,12 @@ import urllib
 import shutil
 import tweepy
 import datetime
+import yaml  # pip install pyyaml
 import mecab_func
 import matcher_main
 import key
-
+import logging.config
+from logging import getLogger
 """
 matcher_main.pyを利用してTwitterAPIを叩く
 """
@@ -19,7 +21,34 @@ matcher_main.pyを利用してTwitterAPIを叩く
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
 SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=3)
+# 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "stidDic.bin"
+
+
+# -------------------------------------
+# logger生成
+# -------------------------------------
+def setup_logging(
+    default_path='logging.yaml',
+    default_level=logging.INFO,
+    env_key='LOG_CFG'
+):
+    """ Setup logging configuration
+    http://goo.gl/7BbSIs
+    """
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            logging.config.dictConfig(yaml.load(f.read()))
+    else:
+        logging.basicConfig(level=default_level)
+
+setup_logging('logging.yaml')
+logger = getLogger(__name__)
+# -------------------------------------
 
 
 def api_authenticate():
@@ -29,9 +58,8 @@ def api_authenticate():
         auth = tweepy.OAuthHandler(key.CONSUMER_KEY, key.CONSUMER_SECRET)
         auth.set_access_token(key.OAUTH_TOKEN, key.OAUTH_SECRET)
     except:
-        print("API Connection Error")
+        logger.critical("API Connection Error", exc_info=True)
         sys.exit()
-
     return tweepy.API(auth)
 
 
@@ -40,15 +68,18 @@ def api_search_user_with_name(api, user_dic):
     - IN  : api認証 api_authenticate(), ユーザの辞書
     """
     at_name = '@' + key.BOT_NAME
-    candidate_tweets = api.search(q=at_name)
     stid_dic = {}
+    try:
+        candidate_tweets = api.search(q=at_name)
+    except:
+        logger.error('api-seach error', exec_info=True)
 
     if (os.path.exists(ID_DUMP_FN)):
         with open(ID_DUMP_FN, 'rb') as f:
             try:
                 stid_dic = pickle.load(f)
-            except EOFError:
-                print('empty pickle file....')
+            except:
+                logger.error('empty pickle file', exec_info=True)
 
     for tweet in candidate_tweets:
         # SDATE以前のツイートは無視する
@@ -56,8 +87,8 @@ def api_search_user_with_name(api, user_dic):
             continue
 
         if not(tweet.id in stid_dic):
-            stid_dic[tweet.id] = {"screen_name":tweet.user.screen_name,
-                    "created_at":tweet.created_at}
+            stid_dic[tweet.id] = {"screen_name": tweet.user.screen_name,
+                                  "created_at": tweet.created_at}
         else:
             continue
 
@@ -77,18 +108,16 @@ def api_get_followers(api, user_dic):
     - IN  : api認証 api_authenticate(), ユーザの辞書
     """
     try:
-        c = tweepy.Cursor(api.friends , id=key.BOT_NAME)
+        c = tweepy.Cursor(api.friends, id=key.BOT_NAME)
         for friend in c.items():
             user_dic[friend.screen_name] = "follower"
 
-        c = tweepy.Cursor(api.followers , id=key.BOT_NAME)
+        c = tweepy.Cursor(api.followers, id=key.BOT_NAME)
         for friend in c.items():
             user_dic[friend.screen_name] = "friend"
     except:
-        print("API Connection Error")
-        sys.exit()
+        logger.error("failed to get followers/friends", exec_info=True)
 
-    print(user_dic)
     return user_dic
 
 
@@ -99,7 +128,11 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     - IN  : api認証, ユーザ, 名言辞書
     - OUT : ユーザのツイート, ミサワのurl, 成功可否のbool値
     """
-    user_tweets = api.user_timeline(id=user, count=10)
+    try:
+        user_tweets = api.user_timeline(id=user, count=10)
+    except:
+        logging.critical("user_timeline fetch error", exec_info=True)
+
     minr = 999.
     target_index = 0
 
@@ -109,20 +142,20 @@ def get_user_text(api, user, meigenWords, tr=0.98):
             try:
                 stid_dic = pickle.load(f)
             except EOFError:
-                print('empty pickle file....')
+                logger.error('empty pickle file', exec_info=True)
 
     for i, tweet in enumerate(user_tweets):
         _id = tweet.id
         if not DEBUG:
             if _id in stid_dic:
-                continue            
+                continue
         try:
             r, url = matcher_main.search_misawa_with_masi(meigenWords, tweet.text, retMasiR=True)
         except UnicodeEncodeError:
-            print("UnicodeEncodeError")
+            logging.warning("UnicodeEncodeError", exec_info=True)
             continue
         except:
-            print("Unexpected Error")
+            logging.error("Unexpected Error", exec_info=True)
             continue
 
         if r < minr:
@@ -132,60 +165,64 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     if minr < tr:
         if not DEBUG:
             stid_dic[user_tweets[target_index].id] = {
-                    "screen_name":user_tweets[target_index].user.screen_name,
-                    "created_at":user_tweets[target_index].created_at}
+                "screen_name": user_tweets[target_index].user.screen_name,
+                "created_at": user_tweets[target_index].created_at}
 
             with open(ID_DUMP_FN, 'wb') as f:
                 pickle.dump(stid_dic, f)
 
         return user_tweets[target_index], url, True
     else:
-        print("no matched meigen:r=[%f]" % minr)
-        print("")
+        logging.info("no meigen matched: minr=[%f]" % minr)
         return "no_tweet", "no_image", False
 
 
 def main():
     # 色々準備
     if not(os.path.exists('meigenWords.bin')):
-        mecab_func.update_misawa_json()
+        mecab_func.update_json()
 
     with open('meigenWords.bin', 'rb') as f:
         try:
             meigenWords = pickle.load(f)
         except EOFError:
-            print('empty pickle file...')
+            logger.error('empty pickle file', exec_info=True)
 
     # Twitter利用
     api = api_authenticate()
     if DEBUG:
         user_dic = {'horesase_test1'}
     else:
+        logger.info("========searching user========")
         user_dic = {}
         api_get_followers(api, user_dic)
         api_search_user_with_name(api, user_dic)
+        logger.info("==============================\n\n")
 
+    logger.info("========calculating masi for users========")
     for user, cls in user_dic.items():
-        print("user:[%s]" % user)
-        print("class:[%s]" % cls)
+        logger.info("user:[%s], class:[%s]" % (user, cls))
         if cls == "follower" or "friend":
             user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.70)
         else:
             user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.95)
 
-        if isMatched == False:
+        if not isMatched:
             continue
 
         # 画像をダウンロード
-        with urllib.request.urlopen(pic_url) as response, open('picture.gif', 'wb') as out_file:
-            shutil.copyfileobj(response, out_file)
-
+        try:
+            with urllib.request.urlopen(pic_url) as response, open('picture.gif', 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+        except:
+            logger.error('misawa download error', exec_info=True)
+            continue
         # ユーザの投稿内容に画像をつけて投稿
         reply_text = '@' + user + ' ' + user_tweet.text
-        print(reply_text)
-        print(pic_url)
-        print("")
+        logger.info("reply_text:[%s]" % reply_text)
+        logger.info("url:[%s]" % pic_url)
         # api.update_with_media('picture.gif', reply_text, in_reply_status_id='user_tweet.id')
+    logger.info("==========================================\n\n")
 
 
 if __name__ == '__main__':
