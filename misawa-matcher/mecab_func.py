@@ -30,7 +30,7 @@ def breakdown_into_validwords(sentence):
 
     sentence = sentence.replace("\n", "")
 
-    model = MeCab.Model_create("-Ochasen")
+    model = MeCab.Model_create("-Ochasen -d mecab-ipadic-neologd")
     tagger = model.createTagger()
     lines = tagger.parse(sentence).split('\n')
     for line in lines:
