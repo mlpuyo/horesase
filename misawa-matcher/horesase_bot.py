@@ -72,14 +72,14 @@ def api_search_user_with_name(api, user_dic):
     try:
         candidate_tweets = api.search(q=at_name)
     except:
-        logger.error('api-seach error', exec_info=True)
+        logger.error('api-seach error', exc_info=True)
 
     if (os.path.exists(ID_DUMP_FN)):
         with open(ID_DUMP_FN, 'rb') as f:
             try:
                 stid_dic = pickle.load(f)
             except:
-                logger.error('empty pickle file', exec_info=True)
+                logger.error('empty pickle file', exc_info=True)
 
     for tweet in candidate_tweets:
         # SDATE以前のツイートは無視する
@@ -116,7 +116,7 @@ def api_get_followers(api, user_dic):
         for friend in c.items():
             user_dic[friend.screen_name] = "friend"
     except:
-        logger.error("failed to get followers/friends", exec_info=True)
+        logger.error("failed to get followers/friends", exc_info=True)
 
     return user_dic
 
@@ -131,7 +131,7 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     try:
         user_tweets = api.user_timeline(id=user, count=10)
     except:
-        logging.critical("user_timeline fetch error", exec_info=True)
+        logging.critical("user_timeline fetch error", exc_info=True)
 
     minr = 999.
     target_index = 0
@@ -142,7 +142,7 @@ def get_user_text(api, user, meigenWords, tr=0.98):
             try:
                 stid_dic = pickle.load(f)
             except EOFError:
-                logger.error('empty pickle file', exec_info=True)
+                logger.error('empty pickle file', exc_info=True)
 
     for i, tweet in enumerate(user_tweets):
         _id = tweet.id
@@ -152,10 +152,10 @@ def get_user_text(api, user, meigenWords, tr=0.98):
         try:
             r, url = matcher_main.search_misawa_with_masi(meigenWords, tweet.text, retMasiR=True)
         except UnicodeEncodeError:
-            logging.warning("UnicodeEncodeError", exec_info=True)
+            logging.warning("UnicodeEncodeError", exc_info=True)
             continue
         except:
-            logging.error("Unexpected Error", exec_info=True)
+            logging.error("Unexpected Error", exc_info=True)
             continue
 
         if r < minr:
@@ -186,7 +186,7 @@ def main():
         try:
             meigenWords = pickle.load(f)
         except EOFError:
-            logger.error('empty pickle file', exec_info=True)
+            logger.error('empty pickle file', exc_info=True)
 
     # Twitter利用
     api = api_authenticate()
@@ -215,7 +215,7 @@ def main():
             with urllib.request.urlopen(pic_url) as response, open('picture.gif', 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except:
-            logger.error('misawa download error', exec_info=True)
+            logger.error('misawa download error', exc_info=True)
             continue
         # ユーザの投稿内容に画像をつけて投稿
         reply_text = '@' + user + ' ' + user_tweet.text

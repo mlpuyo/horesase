@@ -84,15 +84,17 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
 
 def main():
     # pickleがなければ実行。時間がかかる
-    # make_pickle_from_json()
     if not(os.path.exists('meigenWords.bin')):
-        mecab_func.update_misawa_json()
+        mecab_func.update_json()
+        logger.info("meigenWords updated")
 
-    with open('meigenWords.bin', 'rb') as f:
-        try:
+    try:
+        with open('meigenWords.bin', 'rb') as f:
             meigens = pickle.load(f)
-        except:
-            logger.error('empty pickle file', exec_info=True)
+    except FileNotFoundError:
+        logger.error('meigenWords not found', exc_info=True)
+    except:
+        logger.error('empty pickle file', exc_info=True)
 
     # 引数を受け取らない場合、対話的に実行
     if len(sys.argv) < 2:

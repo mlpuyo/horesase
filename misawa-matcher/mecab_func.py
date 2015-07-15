@@ -61,7 +61,7 @@ def make_pickle_from_json(fn='../meigens.json'):
     - 辞書型の配列を作成
     - pickle保存
     """
-    logging.info("making pickels...")
+    logger.info("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
 
@@ -82,7 +82,7 @@ def make_pickle_from_json(fn='../meigens.json'):
         data['words'] = words
         meigenData.append(data)
         if data['id'] % 50 == 0:
-            logging.info('id = %d' % data['id'])
+            logger.info('id = %d' % data['id'])
 
     with open('meigenWords.bin', 'wb') as f:
         pickle.dump(meigenData, f)
@@ -92,10 +92,10 @@ def make_pickle_from_json(fn='../meigens.json'):
         for data in meigenData:
             writer.writerow(data["words"])
 
-    logging.info("pickels updated. meigen count:[%s]" % len(meigenData))
+    logger.info("pickels updated. meigen count:[%s]" % len(meigenData))
 
 
-def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
+def update_json(url='http://horesase.github.io/horesase-boys/meigens.json'):
     """
     名言辞書を最新化します
     - 名言辞書をURLもしくはローカルから取得
@@ -104,24 +104,24 @@ def update_json(url='http://horesase-boys.herokuapp.com/meigens.json'):
 
     # 名言辞書の更新
     try:
-        logging.info("downloading json...")
+        logger.info("downloading json...")
         r = urllib.request.urlopen(url)
     except:
-        logging.error('Could not download json\nCheck Internet Connetcion...')
+        logger.error('Could not download json\nCheck Internet Connetcion...', exc_info=True)
         return
     with open("meigens.json", "wb") as f:
         f.write(r.read())
 
     ts = os.stat("meigens.json").st_mtime
-    logging.info("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
+    logger.info("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
 
     # デシリアライズと形態素解析
     make_pickle_from_json('meigens.json')
 
 
 def test_func_1(sentence):
-    logging.info("input: [%s]" % sentence)
-    logging.info("output:[%s]" % breakdown_into_validwords(sentence))
+    logger.info("input: [%s]" % sentence)
+    logger.info("output:[%s]" % breakdown_into_validwords(sentence))
 
 
 def test_func_2():
