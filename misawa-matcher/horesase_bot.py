@@ -129,12 +129,13 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     - OUT : ユーザのツイート, ミサワのurl, 成功可否のbool値
     """
     try:
-        user_tweets = api.user_timeline(id=user, count=10)
+        user_tweets = api.user_timeline(id=user, count=25)
     except:
         logging.critical("user_timeline fetch error", exc_info=True)
 
     minr = 999.
     target_index = 0
+    matched_url = ""
 
     stid_dic = {}
     if (os.path.exists(ID_DUMP_FN)):
@@ -161,6 +162,7 @@ def get_user_text(api, user, meigenWords, tr=0.98):
         if r < minr:
             target_index = i
             minr = r
+            matched_url = url
 
     if minr < tr:
         if not DEBUG:
@@ -171,7 +173,7 @@ def get_user_text(api, user, meigenWords, tr=0.98):
             with open(ID_DUMP_FN, 'wb') as f:
                 pickle.dump(stid_dic, f)
 
-        return user_tweets[target_index], url, True
+        return user_tweets[target_index], matched_url, True
     else:
         logging.info("no meigen matched: minr=[%f]" % minr)
         return "no_tweet", "no_image", False
@@ -191,19 +193,19 @@ def main():
     # Twitter利用
     api = api_authenticate()
     if DEBUG:
-        user_dic = {'horesase_test1'}
+        user_dic = {'horesase_test1':'follower'}
     else:
         logger.info("========searching user========")
         user_dic = {}
         api_get_followers(api, user_dic)
         api_search_user_with_name(api, user_dic)
-        logger.info("==============================\n\n")
+        logger.info("==============================\n")
 
     logger.info("========calculating masi for users========")
     for user, cls in user_dic.items():
         logger.info("user:[%s], class:[%s]" % (user, cls))
         if cls == "follower" or "friend":
-            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.70)
+            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.93)
         else:
             user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.95)
 
@@ -221,9 +223,11 @@ def main():
         reply_text = '@' + user + ' ' + user_tweet.text
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % pic_url)
-        # api.update_with_media('picture.gif', reply_text, in_reply_status_id='user_tweet.id')
-    logger.info("==========================================\n\n")
+        api.update_with_media('picture.gif', reply_text, in_reply_status_id='user_tweet.id')
+    logger.info("==========================================")
 
 
 if __name__ == '__main__':
+    logger.info("[START]")
     main()
+    logger.info("[END]\n\n")
