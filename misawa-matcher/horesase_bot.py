@@ -20,7 +20,7 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=3)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=10)
 # 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "stidDic.bin"
 
