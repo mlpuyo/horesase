@@ -23,9 +23,6 @@ def breakdown_into_validwords(sentence):
     ret_list = []
 
     if sentence == '' or not(isinstance(sentence, str)):
-        """
-        TODO: 例外処理
-        """
         return ret_list
 
     sentence = sentence.replace("\n", "")
@@ -39,6 +36,9 @@ def breakdown_into_validwords(sentence):
         line = line.split('\t')
         word = line[2]
 
+        # 卑猥な単語を削除
+        if word == 'ちんちん' or word == 'ちんこ':
+            continue
         # 漢字でない一文字のwordは無視
         # 'ー'や'*'も同様
         if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
