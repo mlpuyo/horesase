@@ -24,8 +24,11 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
     targetWords = mecab_func.breakdown_into_validwords(targetSentence)
     
     if len(targetWords) == 0:
-        logger.error("解析ができないよ. 文章を入れてね")
-        return(1)
+        logger.warning("解析ができないよ. 文章を入れてね")
+        if retMasiR:
+            return 1., "no_image"
+        else:
+            return (1.)
 
     # 入力された文章で解析可能な場合
     hit = False
@@ -54,30 +57,31 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
 
     # 例外: すべての名言との距離が 1.0  
     if not hit:
-        logger.info("ベストマッチなし\n")
+        logger.info("ベストマッチなし")
         if retMasiR:
             return 1., "no_image"
         else:
             return (1.)
     
+    logger.info("========masi calculation report========")
+    logger.info("meigens count: %s" % len(meigens))
+    logger.info("input: [%s]" % targetSentence)
+    logger.info("input_breakdown: %s" % targetWords)
+
+    # 抽出された名言
+    logger.info("")
+    logger.info("selected meigen [r = %f]:" % minr)
+    for k, v in matched_inf.items():
+        if k == 'body':
+            v = v.replace('\n', ' ')
+        logger.info('\t%s: %s' % (k, v))
+    logger.info("================")
+
     if retMasiR:
         # 戻り値: MASI距離, 全ミサワ情報
         return minr, matched_inf['image']
     else:
         # レポート
-        logger.info("========masi calculation profile========")
-        logger.info("meigens count: %s" % len(meigens))
-        logger.info("input: [%s]" % targetSentence)
-        logger.info("input_breakdown: %s" % targetWords)
-
-        # 抽出された名言
-        logger.info("")
-        logger.info("selected meigen [r = %f]:" % minr)
-        for k, v in matched_inf.items():
-            if k == 'body':
-                v = v.replace('\n', ' ')
-            logger.info('\t%s: %s' % (k, v))
-        logger.info("================\n\n")
         # 戻り値: 画像のURL
         return(matched_inf['image'])
 
