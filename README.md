@@ -30,11 +30,13 @@ sudo apt-get install libmecab-dev
 ### pythonライブラリのインストール
 ```sh
 sudo pip3 install nltk
+sudo pip3 install tweepy
+sudo pip3 install pyyaml
 ```
 
 ### mecab-pythonのインストール
 ```sh
-sudo pip install mecab-python3
+sudo pip3 install mecab-python3
 ```
 上記で無理なら、
 
@@ -57,6 +59,46 @@ def cmd2(str):
 ```sh
 sudo pip3 install -e .
 ```
+
+## misawa-matcher実行環境 - Amazon Linux, python3.4(64bit)
+### mecab, ipadicのインストール
+```sh
+`# mecab本体のインストール`
+wget https://mecab.googlecode.com/files/mecab-0.996.tar.gz
+tar zxvf mecab-0.996.tar.gz
+cd mecab-0.996
+./configure --with-charset=utf-8
+make
+sudo make install
+sudo bash -c 'echo "/usr/local/lib" >> /etc/ld.so.conf.d/usr-local.conf'
+
+`# 設定の読み直し`
+sudo ldconfig
+
+`# ipadicのインストール`
+wget https://mecab.googlecode.com/files/mecab-ipadic-2.7.0-20070801.tar.gz
+tar zxvf mecab-ipadic-2.7.0-20070801.tar.gz
+cd mecab-ipadic-2.7.0-20070801
+./configure --with-charset=utf-8
+make
+sudo make install
+```
+### pythonライブラリのインストール
+pip3は適宜絶対パスで実行するとトラブルが少ない
+```sh
+which pip3
+sudo /usr/local/bin/pip3 install `package name`
+```
+
+### mecab-pythonのインストール
+setup.pyで下記の変更
+```python
+def cmd2(str):  
+    return string.split (cmd1(str))  
+```
+に加え、`mecab-config`を絶対パスに置換
+(`which mecab-config`などで調べる)
+e.g) mecab-config -> /usr/local/bin/mecab-config
 
 ## misawa-matcher実行環境 - windows8.1, python3.4(64bit)
 [この記事](http://qiita.com/ykchat/items/97dd7be100bfa837b7c4)が参考になる。
