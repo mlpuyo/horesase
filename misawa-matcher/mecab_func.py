@@ -133,6 +133,8 @@ if __name__ == '__main__':
     単独実行時の処理
     - テストしたい処理を記述する
     """
+    import logging
+    logging.basicConfig(level=logging.INFO)
     #test_func_1('今日はいい天気ですね')
     test_func_2();
 
