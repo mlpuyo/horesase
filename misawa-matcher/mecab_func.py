@@ -67,6 +67,8 @@ def make_pickle_from_json(fn='../meigens.json'):
 
     meigenData = []
     for meigen in meigenRowData:
+        if meigen['character'] == 'ちんちんでか男(30)':
+            continue
         data = {}
         words = breakdown_into_validwords(meigen['body'])
         title_words = breakdown_into_validwords(meigen['title'])
