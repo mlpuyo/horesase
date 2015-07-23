@@ -23,8 +23,8 @@ def search_misawa_with_masi(meigens, targetSentence, retMasiR=False):
     """
     targetWords = mecab_func.breakdown_into_validwords(targetSentence)
     
-    if len(targetWords) == 0:
-        logger.warning("解析ができないよ. 文章を入れてね")
+    if len(targetWords) <= 1:
+        logger.warning("less than one word")
         if retMasiR:
             return 1., "no_image"
         else:

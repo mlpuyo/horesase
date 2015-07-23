@@ -37,8 +37,11 @@ def breakdown_into_validwords(sentence):
         word = line[2]
 
         # 卑猥な単語を含む文章は除外
-        if word == 'ちんちん' or word == 'ちんこ' or word == 'キンタマ' or word == 'きんたま':
+        if word in ['ちんちん', 'ちんこ', 'キンタマ', 'きんたま']:
             return ret_list
+        # TODO:除外リストの作成
+        if word in ['今日', '俺', '私', '僕', '人']:
+            continue
         # 漢字でない一文字のwordは無視
         # 'ー'や'*'も同様
         if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
@@ -46,6 +49,8 @@ def breakdown_into_validwords(sentence):
         # 二文字のひらがなは無視
         if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
                 and unicodedata.name(word[1])[0:4] == 'HIRA'):
+            continue
+        if unicodedata.name(word[0])[0:4] == 'LATI':
             continue
         if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
                 or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
@@ -67,13 +72,19 @@ def make_pickle_from_json(fn='../meigens.json'):
 
     meigenData = []
     for meigen in meigenRowData:
-        if meigen['character'] == 'ちんちんでか男(30)':
+        if meigen['character'] in ['ちんちんでか男(30)', 'チーポー(2)']:
             continue
         data = {}
         words = breakdown_into_validwords(meigen['body'])
         title_words = breakdown_into_validwords(meigen['title'])
+
+        # タイトルに含まれる単語が本文にも含まれる場合は削除
+        for word in words:
+            if word in title_words:
+                title_words.remove(word)
+
         words += title_words
-        if len(words) <= 1:
+        if len(words) <= 2:
             continue
 
         data['id'] = meigen['id']

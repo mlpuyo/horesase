@@ -20,7 +20,7 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=10)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=1)
 # 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "stidDic.bin"
 
@@ -36,6 +36,8 @@ def setup_logging(
     """ Setup logging configuration
     http://goo.gl/7BbSIs
     """
+    if not os.path.exists("log"):
+        os.mkdir("log")
     path = default_path
     value = os.getenv(env_key, None)
     if value:
@@ -116,7 +118,7 @@ def api_get_followers(api, user_dic):
         for friend in c.items():
             user_dic[friend.screen_name] = "friend"
     except:
-        logger.error("failed to get followers/friends", exc_info=True)
+        logger.critical("failed to get followers/friends", exc_info=True)
 
     return user_dic
 
@@ -129,7 +131,7 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     - OUT : ユーザのツイート, ミサワのurl, 成功可否のbool値
     """
     try:
-        user_tweets = api.user_timeline(id=user, count=25)
+        user_tweets = api.user_timeline(id=user, count=20)
     except:
         logging.critical("user_timeline fetch error", exc_info=True)
 
@@ -148,7 +150,14 @@ def get_user_text(api, user, meigenWords, tr=0.98):
     for i, tweet in enumerate(user_tweets):
         _id = tweet.id
         if not DEBUG:
+            # 二重投稿防止
             if _id in stid_dic:
+                continue
+            # SDATE以前のツイートは無視する
+            if tweet.created_at < SDATE:
+                continue
+            # 他ユーザへのリプライは対象外
+            if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
                 continue
         try:
             r, url = matcher_main.search_misawa_with_masi(meigenWords, tweet.text, retMasiR=True)
@@ -205,9 +214,9 @@ def main():
     for user, cls in user_dic.items():
         logger.info("user:[%s], class:[%s]" % (user, cls))
         if cls == "follower" or "friend":
-            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.93)
+            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.955)
         else:
-            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.95)
+            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.98)
 
         if not isMatched:
             continue
@@ -223,7 +232,10 @@ def main():
         reply_text = '@' + user + ' ' + user_tweet.text
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % pic_url)
-        api.update_with_media('picture.gif', reply_text, in_reply_status_id='user_tweet.id')
+        try:
+            api.update_with_media('picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+        except:
+            logger.error('reply error', exc_info=True)
     logger.info("==========================================")
 
 
