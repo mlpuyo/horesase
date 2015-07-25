@@ -52,6 +52,8 @@ def breakdown_into_validwords(sentence):
             continue
         if unicodedata.name(word[0])[0:4] == 'LATI':
             continue
+        if word.isdigit():
+            continue
         if (line[3][:2] == '名詞' or line[3][:2] == '動詞'
                 or line[3][:2] == '副詞' or line[3][:3] == '形容詞'):
             ret_list.append(word)
