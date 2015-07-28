@@ -42,15 +42,19 @@ def breakdown_into_validwords(sentence):
         # TODO:除外リストの作成
         if word in ['今日', '俺', '私', '僕', '人']:
             continue
+        try:
+            jtype = unicodedata.name(word[0])
+        except:
+            continue
         # 漢字でない一文字のwordは無視
         # 'ー'や'*'も同様
-        if len(word) == 1 and unicodedata.name(word[0])[0:4] != 'CJK ':
+        if len(word) == 1 and jtype[0:4] != 'CJK ':
             continue
         # 二文字のひらがなは無視
-        if (len(word) == 2 and unicodedata.name(word[0])[0:4] == 'HIRA'
+        if (len(word) == 2 and jtype[0:4] == 'HIRA'
                 and unicodedata.name(word[1])[0:4] == 'HIRA'):
             continue
-        if unicodedata.name(word[0])[0:4] == 'LATI':
+        if jtype[0:4] == 'LATI':
             continue
         if word.isdigit():
             continue
