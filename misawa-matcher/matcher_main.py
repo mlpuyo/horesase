@@ -25,8 +25,8 @@ def search_misawa(meigens, targetSentence, retR=False,
     """
     targetWords = mecab_func.breakdown_into_validwords(targetSentence)
     
-    if len(targetWords) <= 1:
-        logger.warning("less than one word")
+    if len(targetWords) <= 2 or len(targetWords) >= 30:
+        logger.warning("bad tweet for misawa-recommend")
         if retR:
             return 1., "no_image"
         else:
@@ -48,7 +48,7 @@ def search_misawa(meigens, targetSentence, retR=False,
         elif method == 'masi':
             # MASI距離による類似度判定。小さいほど類似
             r = masi_distance(set(targetWords), set(words))
-        elif method[0:3] in ['lsi', 'lda']:
+        elif method[0:3] in ['lsi', 'lda', 'LSI', 'LDA']:
             # コサイン類似度で判定。負で評価し、小さいほど類似
             vec = model[dictionary.doc2bow(targetWords)]
             r = -1.*matutils.cossim(meigen[method], vec)
