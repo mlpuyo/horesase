@@ -10,7 +10,8 @@ import datetime
 import yaml  # pip install pyyaml
 import mecab_func
 import matcher_main
-import key
+from data import key
+from gensim import corpora, models, similarities, matutils
 import logging.config
 from logging import getLogger
 """
@@ -20,9 +21,9 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(days=1)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=6)
 # 送りつけたtweetidのキャッシュファイル名
-ID_DUMP_FN = "stidDic.bin"
+ID_DUMP_FN = "data/stidDic.bin"
 
 
 # -------------------------------------
@@ -123,7 +124,8 @@ def api_get_followers(api, user_dic):
     return user_dic
 
 
-def get_user_text(api, user, meigenWords, tr=0.98):
+def get_user_text(api, user, meigenWords, tr=0.98, 
+        method='masi', model=None, dictionary=None):
     """ 任意ユーザの直近ツイート10件を取得
     ツイートとミサワ画像のurlを返却
     ※10件というのはとりあえずの値
@@ -160,7 +162,8 @@ def get_user_text(api, user, meigenWords, tr=0.98):
             if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
                 continue
         try:
-            r, url = matcher_main.search_misawa_with_masi(meigenWords, tweet.text, retMasiR=True)
+            r, url = matcher_main.search_misawa(meigenWords, tweet.text,
+                         retR=True, method=method, model=model, dictionary=dictionary)
         except UnicodeEncodeError:
             logging.warning("UnicodeEncodeError", exc_info=True)
             continue
@@ -190,10 +193,10 @@ def get_user_text(api, user, meigenWords, tr=0.98):
 
 def main():
     # 色々準備
-    if not(os.path.exists('meigenWords.bin')):
+    if not(os.path.exists('data/meigenWords.bin')):
         mecab_func.update_json()
 
-    with open('meigenWords.bin', 'rb') as f:
+    with open('data/meigenWords.bin', 'rb') as f:
         try:
             meigenWords = pickle.load(f)
         except EOFError:
@@ -210,20 +213,48 @@ def main():
         api_search_user_with_name(api, user_dic)
         logger.info("==============================\n")
 
-    logger.info("========calculating masi for users========")
+    logger.info("========calc start========")
+    isModeled = False
+    if len(sys.argv) >= 4:
+        method = sys.argv[1]
+        pathToModel = sys.argv[2]
+        pathToDict = sys.argv[3]
+        isModeled = True
+        try:
+            dictionary = corpora.Dictionary.load_from_text(pathToDict)
+            if method[0:3] in ["lda", "LDA"]:
+                model = models.LdaModel.load(pathToModel)
+            elif method[0:3] in ["lsi", "LSI"]:
+                model = models.LsiModel.load(pathToModel)
+            else:
+                logger.critical("invalid model")
+                sys.exit()
+            logger.info("model loaded")
+        except:
+            logger.critical("failed to load model", exc_info=True)
+            sys.exit()
+
     for user, cls in user_dic.items():
         logger.info("user:[%s], class:[%s]" % (user, cls))
-        if cls == "follower" or "friend":
-            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.955)
+        if isModeled:
+            if cls == "follower" or "friend":
+                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords,
+                        tr=-0.75, method=method, model=model, dictionary=dictionary)
+            else:
+                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords,
+                        tr=-0.1, method=method, model=model, dictionary=dictionary)
         else:
-            user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.98)
+            if cls == "follower" or "friend":
+                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.955)
+            else:
+                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.98)
 
         if not isMatched:
             continue
 
         # 画像をダウンロード
         try:
-            with urllib.request.urlopen(pic_url) as response, open('picture.gif', 'wb') as out_file:
+            with urllib.request.urlopen(pic_url) as response, open('data/picture.gif', 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except:
             logger.error('misawa download error', exc_info=True)
@@ -233,7 +264,8 @@ def main():
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % pic_url)
         try:
-            api.update_with_media('picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+            # api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+            logger.info(reply_text)
         except:
             logger.error('reply error', exc_info=True)
     logger.info("==========================================")

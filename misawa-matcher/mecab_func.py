@@ -9,6 +9,7 @@ import MeCab
 import urllib.request
 from subprocess import Popen, PIPE
 from datetime import datetime
+from gensim import corpora, models, similarities, matutils
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -66,7 +67,7 @@ def breakdown_into_validwords(sentence):
     return ret_list
 
 
-def make_pickle_from_json(fn='../meigens.json'):
+def make_pickle_from_json(fn='meigens.json'):
     """"
     名言辞書の形態素解析
     - 辞書型の配列を作成
@@ -75,6 +76,13 @@ def make_pickle_from_json(fn='../meigens.json'):
     logger.info("making pickels...")
     with open(fn, 'r', encoding='utf-8') as f:
         meigenRowData = json.load(f)
+
+    dictionary = corpora.Dictionary.load_from_text('model/jawiki_wordids.txt.bz2')
+    lsi100 = models.LsiModel.load("model/lsi100.model")
+    lsi300 = models.LsiModel.load("model/lsi300.model")
+    lda100 = models.LdaModel.load("model/lda100.model")
+    lda200 = models.LdaModel.load("model/lda200.model")
+    lda300 = models.LdaModel.load("model/lda300.model")
 
     meigenData = []
     for meigen in meigenRowData:
@@ -99,14 +107,20 @@ def make_pickle_from_json(fn='../meigens.json'):
         data['title'] = meigen['title']
         data['body'] = meigen['body']
         data['words'] = words
+        data['lsi100'] = lsi100[dictionary.doc2bow(words)]
+        data['lsi300'] = lsi300[dictionary.doc2bow(words)]
+        data['lda100'] = lda100[dictionary.doc2bow(words)]
+        data['lda200'] = lda200[dictionary.doc2bow(words)]
+        data['lda300'] = lda300[dictionary.doc2bow(words)]
+
         meigenData.append(data)
         if data['id'] % 50 == 0:
             logger.info('id = %d' % data['id'])
 
-    with open('meigenWords.bin', 'wb') as f:
+    with open('data/meigenWords.bin', 'wb') as f:
         pickle.dump(meigenData, f)
 
-    with open('meigenWords.csv', mode='w', encoding='utf-8') as f:
+    with open('data/meigenWords.csv', mode='w', encoding='utf-8') as f:
         writer = csv.writer(f, lineterminator='\n')
         for data in meigenData:
             writer.writerow(data["words"])
@@ -128,14 +142,13 @@ def update_json(url='http://horesase.github.io/horesase-boys/meigens.json'):
     except:
         logger.error('Could not download json\nCheck Internet Connetcion...', exc_info=True)
         return
-    with open("meigens.json", "wb") as f:
+    with open("data/meigens.json", "wb") as f:
         f.write(r.read())
 
-    ts = os.stat("meigens.json").st_mtime
-    logger.info("file[meigens.json] updated:[%s]" % datetime.fromtimestamp(ts))
+    logger.info("file[meigens.json] updated")
 
     # デシリアライズと形態素解析
-    make_pickle_from_json('meigens.json')
+    make_pickle_from_json('data/meigens.json')
 
 
 def test_func_1(sentence):
