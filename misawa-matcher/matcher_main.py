@@ -7,7 +7,6 @@ import mecab_func
 from nltk.metrics.distance import masi_distance
 from nltk.metrics.distance import jaccard_distance
 from gensim import corpora, models, similarities, matutils
-from gensim.models import doc2vec
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -54,12 +53,7 @@ def search_misawa(meigens, targetSentence, retR=False,
             r = -1.*matutils.cossim(meigen[method], vec)
         elif method[0:3] in ['d2v', 'doc']:
             # コサイン類似度で判定。負で評価し、小さいほど類似
-            doc1 = extract_word(targetWords, model)
-            doc2 = extract_word(words, model)
-            if len(doc1) >= 2 and len(doc2)  >= 2:
-                r = -1.*model.n_similarity(doc1, doc2)
-            else:
-                continue
+            r = -1.*d2v_similarity(targetWords, words, model)
 
         if r < minr:
             hit = True
@@ -90,7 +84,7 @@ def search_misawa(meigens, targetSentence, retR=False,
         return(matched_inf['image'])
 
 
-def extract_word(words, model):
+def d2v_extract_word(words, model):
     '''doc2vec用の登録語以外を除外する関数'''
     doc = []
     if len(words) == 1:
@@ -99,7 +93,6 @@ def extract_word(words, model):
         except KeyError:
             return []
         return words
-
     for w in words:
         try:
             model[w]
@@ -107,6 +100,16 @@ def extract_word(words, model):
             continue
         doc.append(w)
     return doc
+
+
+def d2v_similarity(doc1, doc2, model):
+    doc1 = d2v_extract_word(doc1, model)
+    doc2 = d2v_extract_word(doc2, model)
+    if len(doc1) >= 2 and len(doc2)  >= 2:
+        r = model.n_similarity(doc1, doc2)
+        return r
+    else:
+        return -1.
 
 
 def compare_models(meigens):
@@ -123,7 +126,7 @@ def compare_models(meigens):
     lda100 = models.LdaModel.load("model/lda100.model")
     lda200 = models.LdaModel.load("model/lda200.model")
     lda300 = models.LdaModel.load("model/lda300.model")
-    d2v    = doc2vec.Doc2Vec(hashfxn=myhashfxn)
+    d2v    = models.doc2vec.Doc2Vec(hashfxn=myhashfxn)
     d2v    = d2v.load("model/d2v.model")
 
     if not os.path.exists('out'):
