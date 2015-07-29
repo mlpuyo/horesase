@@ -1,3 +1,4 @@
+*.pynb
 *.pyc
 *.bin
 *.csv

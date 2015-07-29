@@ -221,10 +221,15 @@ def main():
         pathToDict = sys.argv[3]
         isModeled = True
         try:
-            dictionary = corpora.Dictionary.load_from_text(pathToDict)
             if method[0:3] in ["lda", "LDA"]:
                 model = models.LdaModel.load(pathToModel)
+                dictionary = corpora.Dictionary.load_from_text(pathToDict)
             elif method[0:3] in ["lsi", "LSI"]:
+                model = models.LsiModel.load(pathToModel)
+                dictionary = corpora.Dictionary.load_from_text(pathToDict)
+            elif method[0:3] in ["d2v", "doc"]:
+                d2v    = models.doc2vec.Doc2Vec(hashfxn=matcher_main.myhashfxn)
+                d2v    = d2v.load(pathToModel)
                 model = models.LsiModel.load(pathToModel)
             else:
                 logger.critical("invalid model")
