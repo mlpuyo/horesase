@@ -21,7 +21,7 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=6)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
 # 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "data/stidDic.bin"
 
@@ -264,8 +264,8 @@ def main():
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % pic_url)
         try:
-            # api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
-            logger.info(reply_text)
+            api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+            # logger.info(reply_text)
         except:
             logger.error('reply error', exc_info=True)
     logger.info("==========================================")
