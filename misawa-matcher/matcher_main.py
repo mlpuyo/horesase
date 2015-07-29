@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import sys
 import pickle
-import webbrowser
 import mecab_func
 # nltkはロードが遅い
 from nltk.metrics.distance import masi_distance
+from nltk.metrics.distance import jaccard_distance
 from gensim import corpora, models, similarities, matutils
+from gensim.models import doc2vec
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -44,7 +44,7 @@ def search_misawa(meigens, targetSentence, retR=False,
 
         if method == 'jaccard':
             # Jaccard距離による類似度判定。小さいほど類似
-            r = nltk.metrics.distance.jaccard_distance(set(targetWords), set(words))
+            r = jaccard_distance(set(targetWords), set(words))
         elif method == 'masi':
             # MASI距離による類似度判定。小さいほど類似
             r = masi_distance(set(targetWords), set(words))
@@ -52,6 +52,14 @@ def search_misawa(meigens, targetSentence, retR=False,
             # コサイン類似度で判定。負で評価し、小さいほど類似
             vec = model[dictionary.doc2bow(targetWords)]
             r = -1.*matutils.cossim(meigen[method], vec)
+        elif method[0:3] in ['d2v', 'doc']:
+            # コサイン類似度で判定。負で評価し、小さいほど類似
+            doc1 = extract_word(targetWords, model)
+            doc2 = extract_word(words, model)
+            if len(doc1) >= 2 and len(doc2)  >= 2:
+                r = -1.*model.n_similarity(doc1, doc2)
+            else:
+                continue
 
         if r < minr:
             hit = True
@@ -59,14 +67,14 @@ def search_misawa(meigens, targetSentence, retR=False,
             matched_inf = meigen
         cnt = cnt + 1
 
-    # 例外: すべての名言との距離が 1.0  
+    # 例外: すべての名言との距離が 1.0
     if not hit:
         logger.info("ベストマッチなし")
         if retR:
             return 1., "no_image"
         else:
             return (1.)
-    
+
     logger.info("========calculation report========")
     logger.info("method: %s [r = %f]" % (method, minr))
     logger.info("input : %s %s" % (targetSentence, targetWords))
@@ -80,6 +88,25 @@ def search_misawa(meigens, targetSentence, retR=False,
         # レポート
         # 戻り値: 画像のURL
         return(matched_inf['image'])
+
+
+def extract_word(words, model):
+    '''doc2vec用の登録語以外を除外する関数'''
+    doc = []
+    if len(words) == 1:
+        try:
+            model[words]
+        except KeyError:
+            return []
+        return words
+
+    for w in words:
+        try:
+            model[w]
+        except KeyError:
+            continue
+        doc.append(w)
+    return doc
 
 
 def compare_models(meigens):
@@ -96,6 +123,8 @@ def compare_models(meigens):
     lda100 = models.LdaModel.load("model/lda100.model")
     lda200 = models.LdaModel.load("model/lda200.model")
     lda300 = models.LdaModel.load("model/lda300.model")
+    d2v    = doc2vec.Doc2Vec(hashfxn=myhashfxn)
+    d2v    = d2v.load("model/d2v.model")
 
     if not os.path.exists('out'):
         os.mkdir('out')
@@ -105,9 +134,9 @@ def compare_models(meigens):
             os.mkdir(dir)
         for method, model in [['lsi100', lsi100], ['lsi300', lsi300],
                               ['lda100', lda100], ['lda200', lda200],
-                              ['lda300', lda300], ['masi', None]]:
+                              ['lda300', lda300], ['d2v', d2v], ['masi', None]]:
             r, url = search_misawa(meigens, tweet, retR=True,
-                    method=method, model=model, dictionary=dictionary)
+                        method=method, model=model, dictionary=dictionary)
             if r >= 1:
                 continue
             try:
@@ -116,6 +145,10 @@ def compare_models(meigens):
                     shutil.copyfileobj(response, out_file)
             except:
                 pass
+
+
+def myhashfxn(obj):
+    return hash(obj) % (2 ** 32)
 
 
 def main():
