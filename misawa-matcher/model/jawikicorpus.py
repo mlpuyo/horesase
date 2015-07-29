@@ -31,7 +31,7 @@ from gensim.corpora.textcorpus import TextCorpus
 
 import unicodedata
 import MeCab
-model = MeCab.Model_create("-Ochasen -d mecab-ipadic-neologd")
+model = MeCab.Model_create("-Ochasen -d ../mecab-ipadic-neologd")
 tagger = model.createTagger()
 ofs = open("out4dvec.cor", "w", encoding="utf8")
 
