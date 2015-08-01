@@ -136,6 +136,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
         user_tweets = api.user_timeline(id=user, count=20)
     except:
         logging.critical("user_timeline fetch error", exc_info=True)
+        return "no_tweet", "no_image", False
 
     minr = 999.
     target_index = 0
@@ -215,11 +216,13 @@ def main():
 
     logger.info("========calc start========")
     isModeled = False
-    if len(sys.argv) >= 4:
+    if len(sys.argv) >= 3:
         method = sys.argv[1]
         pathToModel = sys.argv[2]
-        pathToDict = sys.argv[3]
         isModeled = True
+    if len(sys.argv) >= 4:
+        pathToDict = sys.argv[3]
+    if isModeled:
         try:
             if method[0:3] in ["lda", "LDA"]:
                 model = models.LdaModel.load(pathToModel)

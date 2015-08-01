@@ -41,7 +41,7 @@ def breakdown_into_validwords(sentence):
         if word in ['ちんちん', 'ちんこ', 'キンタマ', 'きんたま']:
             return ret_list
         # TODO:除外リストの作成
-        if word in ['今日', '俺', '私', '僕', '人']:
+        if word in ['今日', '俺', '私', '僕', '人', '思う']:
             continue
         try:
             jtype = unicodedata.name(word[0])
