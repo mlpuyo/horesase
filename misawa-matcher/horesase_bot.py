@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import re
 import pickle
 import urllib
 import shutil
@@ -21,7 +22,7 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
 # 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "data/stidDic.bin"
 
@@ -194,6 +195,37 @@ def get_user_text(api, user, meigenWords, tr=0.98,
         return "no_tweet", "no_image", False
 
 
+def make_reply_text(user,  tweet):
+    '''ユーザ名とつぶやきの内容から、返信内容を整形
+    - IN  : ユーザ名,  statusオブジェクト
+    - OUT : 返信内容の文字列
+    '''
+    # 本来ptnは使いまわしたほうが好ましい
+    ptn1 = re.compile ('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
+    ptn2 = re.compile ('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
+    ptn3 = re.compile ('【.+】')  # 拡散希望等のタグを除外
+    ptn4 = re.compile ('\n+')  # 改行を除外
+    ptn5 = re.compile ('\s+')  # 余計な空白を除外
+    ptn6  = re.compile ('(、|。|!|！|\?|？|\.|．|」|】|』)\s')  # 文末の空白
+
+    text = tweet.text
+    text = re.sub(ptn1, '', text)
+    text = re.sub(ptn2, '', text)
+    text = re.sub(ptn3, '', text)
+    text = re.sub(ptn4, ' ', text)  # 改行は空白に
+    text = re.sub(ptn5, ' ', text)  # 2つ以上の空白は1つに
+    text = re.sub(ptn6, r'\1', text)  # 文末の空白は除外
+
+    text = text.replace('「', '『')
+    text = text.replace('」', '』')
+    text = "「" + text + "」"
+
+    reply_text = "@" + user + "\n"
+    reply_text += re.sub(r'\n|\s', '', tweet.author.name)
+    reply_text += text
+    return reply_text
+
+
 def main():
     # 色々準備
     if not(os.path.exists('data/meigenWords.bin')):
@@ -249,7 +281,7 @@ def main():
         if isModeled:
             if cls == "follower" or "friend":
                 user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords,
-                        tr=-0.75, method=method, model=model, dictionary=dictionary)
+                        tr=-0.7, method=method, model=model, dictionary=dictionary)
             else:
                 user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords,
                         tr=-0.1, method=method, model=model, dictionary=dictionary)
@@ -270,16 +302,12 @@ def main():
             logger.error('misawa download error', exc_info=True)
             continue
         # ユーザの投稿内容に画像をつけて投稿
-        reply_text = "@" + user
-        # reply_text += " " + meigen["character"]  # character名を追加
-        # reply_text += " " + "「" + meigen["title"] + "」"  # タイトルを追加
-        reply_text += "\n" + user_tweet.author.name.replace('\n', '')
-        reply_text += "「" + user_tweet.text.replace('\n', ' ') + "」"
+        reply_text = make_reply_text(user, user_tweet)
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % meigen['image'])
         try:
             api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
-            # logger.info(reply_text)
+            # pass
         except:
             logger.error('reply error', exc_info=True)
     logger.info("==========================================")
