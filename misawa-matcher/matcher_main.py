@@ -73,15 +73,14 @@ def search_misawa(meigens, targetSentence, retR=False,
     logger.info("method: %s [r = %f]" % (method, minr))
     logger.info("input : %s %s" % (targetSentence, targetWords))
     logger.info('meigen: %s %s' % (matched_inf['body'].replace('\n', ' '), matched_inf['words']))
-    logger.info("==================================")
 
     if retR:
         # 戻り値: MASI距離, 全ミサワ情報
-        return minr, matched_inf['image']
+        return minr, matched_inf
     else:
         # レポート
         # 戻り値: 画像のURL
-        return(matched_inf['image'])
+        return(matched_inf)
 
 
 def d2v_extract_word(words, model):
@@ -138,12 +137,12 @@ def compare_models(meigens):
         for method, model in [['lsi100', lsi100], ['lsi300', lsi300],
                               ['lda100', lda100], ['lda200', lda200],
                               ['lda300', lda300], ['d2v', d2v], ['masi', None]]:
-            r, url = search_misawa(meigens, tweet, retR=True,
+            r, meigen = search_misawa(meigens, tweet, retR=True,
                         method=method, model=model, dictionary=dictionary)
             if r >= 1:
                 continue
             try:
-                with urllib.request.urlopen(url) as response, open(
+                with urllib.request.urlopen(meigen['image']) as response, open(
                         dir + '/' + method + str(int(-r*100)) + '.gif', 'wb') as out_file:
                     shutil.copyfileobj(response, out_file)
             except:

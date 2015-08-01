@@ -127,10 +127,10 @@ def api_get_followers(api, user_dic):
 def get_user_text(api, user, meigenWords, tr=0.98, 
         method='masi', model=None, dictionary=None):
     """ 任意ユーザの直近ツイート10件を取得
-    ツイートとミサワ画像のurlを返却
+    ツイートとミサワ画像の辞書を返却
     ※10件というのはとりあえずの値
     - IN  : api認証, ユーザ, 名言辞書
-    - OUT : ユーザのツイート, ミサワのurl, 成功可否のbool値
+    - OUT : ユーザのツイート, ミサワの辞書, 成功可否のbool値
     """
     try:
         user_tweets = api.user_timeline(id=user, count=20)
@@ -140,7 +140,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
 
     minr = 999.
     target_index = 0
-    matched_url = ""
+    matched_meigen = {}
 
     stid_dic = {}
     if (os.path.exists(ID_DUMP_FN)):
@@ -163,7 +163,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
             if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
                 continue
         try:
-            r, url = matcher_main.search_misawa(meigenWords, tweet.text,
+            r, meigen = matcher_main.search_misawa(meigenWords, tweet.text,
                          retR=True, method=method, model=model, dictionary=dictionary)
         except UnicodeEncodeError:
             logging.warning("UnicodeEncodeError", exc_info=True)
@@ -175,7 +175,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
         if r < minr:
             target_index = i
             minr = r
-            matched_url = url
+            matched_meigen = meigen
 
     if minr < tr:
         if not DEBUG:
@@ -186,7 +186,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
             with open(ID_DUMP_FN, 'wb') as f:
                 pickle.dump(stid_dic, f)
 
-        return user_tweets[target_index], matched_url, True
+        return user_tweets[target_index], matched_meigen, True
     else:
         logging.info("no meigen matched: minr=[%f]" % minr)
         return "no_tweet", "no_image", False
@@ -246,34 +246,37 @@ def main():
         logger.info("user:[%s], class:[%s]" % (user, cls))
         if isModeled:
             if cls == "follower" or "friend":
-                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords,
+                user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords,
                         tr=-0.75, method=method, model=model, dictionary=dictionary)
             else:
-                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords,
+                user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords,
                         tr=-0.1, method=method, model=model, dictionary=dictionary)
         else:
             if cls == "follower" or "friend":
-                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.955)
+                user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords, 0.955)
             else:
-                user_tweet, pic_url, isMatched = get_user_text(api, user, meigenWords, 0.98)
+                user_tweet, meigen, isMatched = get_user_text(api, user, meigenWords, 0.98)
 
         if not isMatched:
             continue
 
         # 画像をダウンロード
         try:
-            with urllib.request.urlopen(pic_url) as response, open('data/picture.gif', 'wb') as out_file:
+            with urllib.request.urlopen(meigen['image']) as response, open('data/picture.gif', 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except:
             logger.error('misawa download error', exc_info=True)
             continue
         # ユーザの投稿内容に画像をつけて投稿
-        reply_text = '@' + user + ' ' + user_tweet.text
+        reply_text = "@" + user
+        # reply_text += " " + meigen["character"]  # character名を追加
+        reply_text += " " + "「" + meigen["title"] + "」"  # タイトルを追加
+        reply_text += "\n" + user_tweet.text
         logger.info("reply_text:[%s]" % reply_text)
-        logger.info("url:[%s]" % pic_url)
+        logger.info("url:[%s]" % meigen['image'])
         try:
-            api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
-            # logger.info(reply_text)
+            # api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+            logger.info(reply_text)
         except:
             logger.error('reply error', exc_info=True)
     logger.info("==========================================")
