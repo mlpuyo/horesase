@@ -91,7 +91,8 @@ def api_search_user_with_name(api, user_dic):
 
         if not(tweet.id in stid_dic):
             stid_dic[tweet.id] = {"screen_name": tweet.user.screen_name,
-                                  "created_at": tweet.created_at}
+                    "text":tweet.text, 
+                    "created_at": tweet.created_at}
         else:
             continue
 
@@ -181,6 +182,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
         if not DEBUG:
             stid_dic[user_tweets[target_index].id] = {
                 "screen_name": user_tweets[target_index].user.screen_name,
+                "text": user_tweets[target_index].text,
                 "created_at": user_tweets[target_index].created_at}
 
             with open(ID_DUMP_FN, 'wb') as f:
@@ -275,8 +277,8 @@ def main():
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % meigen['image'])
         try:
-            # api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
-            logger.info(reply_text)
+            api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+            # logger.info(reply_text)
         except:
             logger.error('reply error', exc_info=True)
     logger.info("==========================================")
