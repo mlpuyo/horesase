@@ -71,7 +71,7 @@ def search_misawa(meigens, targetSentence, retR=False,
 
     logger.info("========calculation report========")
     logger.info("method: %s [r = %f]" % (method, minr))
-    logger.info("input : %s %s" % (targetSentence, targetWords))
+    logger.info("input : %s %s" % (targetSentence.replace('\n', ' '), targetWords))
     logger.info('meigen: %s %s' % (matched_inf['body'].replace('\n', ' '), matched_inf['words']))
 
     if retR:
