@@ -38,10 +38,10 @@ def breakdown_into_validwords(sentence):
         word = line[2]
 
         # 卑猥な単語を含む文章は除外
-        if word in ['ちんちん', 'ちんこ', 'キンタマ', 'きんたま']:
-            return ret_list
+        if word in ['ちんちん', 'ちんこ', 'キンタマ', 'きんたま', '痴漢']:
+            return []
         # TODO:除外リストの作成
-        if word in ['今日', '俺', '私', '僕', '人', '思う']:
+        if word in ['今日', '俺', '私', '僕', '人', '思う', '何', '行く', 'もらえる', 'られる']:
             continue
         try:
             jtype = unicodedata.name(word[0])
