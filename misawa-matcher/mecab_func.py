@@ -55,6 +55,9 @@ def breakdown_into_validwords(sentence):
         if (len(word) == 2 and jtype[0:4] == 'HIRA'
                 and unicodedata.name(word[1])[0:4] == 'HIRA'):
             continue
+        # 伸ばし棒を含むひらがなは無視
+        if jtype[0:4] == 'HIRA' and 'ー' in word:
+            continue
         if jtype[0:4] == 'LATI':
             continue
         if word.isdigit():
@@ -90,14 +93,14 @@ def make_pickle_from_json(fn='meigens.json'):
             continue
         data = {}
         words = breakdown_into_validwords(meigen['body'])
-        title_words = breakdown_into_validwords(meigen['title'])
+        # title_words = breakdown_into_validwords(meigen['title'])
 
         # タイトルに含まれる単語が本文にも含まれる場合は削除
-        for word in words:
-            if word in title_words:
-                title_words.remove(word)
+        # for word in words:
+        #     if word in title_words:
+        #         title_words.remove(word)
 
-        words += title_words
+        # words += title_words
         if len(words) <= 2:
             continue
 
