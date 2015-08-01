@@ -272,8 +272,9 @@ def main():
         # ユーザの投稿内容に画像をつけて投稿
         reply_text = "@" + user
         # reply_text += " " + meigen["character"]  # character名を追加
-        reply_text += " " + "「" + meigen["title"] + "」"  # タイトルを追加
-        reply_text += "\n" + user_tweet.text
+        # reply_text += " " + "「" + meigen["title"] + "」"  # タイトルを追加
+        reply_text += "\n" + user_tweet.author.name.replace('\n', '')
+        reply_text += "「" + user_tweet.text.replace('\n', ' ') + "」"
         logger.info("reply_text:[%s]" % reply_text)
         logger.info("url:[%s]" % meigen['image'])
         try:
