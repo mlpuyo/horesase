@@ -42,7 +42,7 @@ def breakdown_into_validwords(sentence):
             return []
         # TODO:除外リストの作成
         if word in ['今日', '俺', '私', '僕', '人', '思う', 'ちゃう', 
-                '何', '行く', 'もらう', 'られる', 'くれる']:
+                '何', '行く', 'もらう', 'られる', 'くれる', 'すぎる']:
             continue
         try:
             jtype = unicodedata.name(word[0])
