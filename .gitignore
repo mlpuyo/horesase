@@ -15,7 +15,10 @@
 *.bz2
 *.projection
 *.tfidf_model
+*.log
+*.txt
 mecab-ipadic-neologd
 key.py
+cron_job.sh
 consumer_and_token
 __pycache__
