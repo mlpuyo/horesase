@@ -22,7 +22,7 @@ matcher_main.pyを利用してTwitterAPIを叩く
 # デバッグ用に特定アカウントのみを対象として実行
 DEBUG = False
 # ユーザ探索時の投稿日時の下限
-SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+SDATE = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
 # 送りつけたtweetidのキャッシュファイル名
 ID_DUMP_FN = "data/stidDic.bin"
 
@@ -203,18 +203,18 @@ def make_reply_text(user,  tweet):
     # 本来ptnは使いまわしたほうが好ましい
     ptn1 = re.compile ('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
     ptn2 = re.compile ('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
-    ptn3 = re.compile ('【.+】')  # 拡散希望等のタグを除外
-    ptn4 = re.compile ('\n+')  # 改行を除外
-    ptn5 = re.compile ('\s+')  # 余計な空白を除外
-    ptn6  = re.compile ('(、|。|!|！|\?|？|\.|．|」|】|』)\s')  # 文末の空白
+    ptn3 = re.compile ('【.+】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
+    ptn4 = re.compile ('[wｗWW]{4,}|\n+')  # 4回以上のｗ、改行はスペース一つに
+    ptn5 = re.compile ('(、|。|!|！|\?|？|\.|．|…|w|ｗ|」|】|』)\s')  # 文末の空白
 
     text = tweet.text
     text = re.sub(ptn1, '', text)
     text = re.sub(ptn2, '', text)
     text = re.sub(ptn3, '', text)
-    text = re.sub(ptn4, ' ', text)  # 改行は空白に
-    text = re.sub(ptn5, ' ', text)  # 2つ以上の空白は1つに
-    text = re.sub(ptn6, r'\1', text)  # 文末の空白は除外
+    text = re.sub(ptn4, ' ', text)
+    text = re.sub(ptn5, r'\1', text)  # 文末の空白は除外
+    text = re.sub(r'\s+', ' ', text)  # 2つ以上の空白は1つに
+    text = re.sub(r'\s+$', '', text)  # 末尾の空白は削除
 
     text = text.replace('「', '『')
     text = text.replace('」', '』')
