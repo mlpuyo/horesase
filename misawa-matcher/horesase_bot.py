@@ -73,6 +73,7 @@ def api_search_user_with_name(api, user_dic):
     """
     at_name = '@' + key.BOT_NAME
     stid_dic = {}
+    tweet_to_reply = []
     try:
         candidate_tweets = api.search(q=at_name)
     except:
@@ -92,7 +93,7 @@ def api_search_user_with_name(api, user_dic):
 
         if not(tweet.id in stid_dic):
             stid_dic[tweet.id] = {"screen_name": tweet.user.screen_name,
-                    "text":tweet.text, 
+                    "text": tweet.text,
                     "created_at": tweet.created_at}
         else:
             continue
@@ -100,12 +101,16 @@ def api_search_user_with_name(api, user_dic):
         if not(tweet.user.screen_name in user_dic):
             user_dic[tweet.user.screen_name] = "message user"
 
+        tweet_to_reply.append(tweet)
+
     # 自分は削る
     if key.BOT_NAME in user_dic:
         del user_dic[key.BOT_NAME]
 
     with open(ID_DUMP_FN, 'wb') as f:
         pickle.dump(stid_dic, f)
+
+    return tweet_to_reply
 
 
 def api_get_followers(api, user_dic):
@@ -126,7 +131,7 @@ def api_get_followers(api, user_dic):
     return user_dic
 
 
-def get_user_text(api, user, meigenWords, tr=0.98, 
+def get_user_text(api, user, meigenWords, tr=0.98,
         method='masi', model=None, dictionary=None):
     """ 任意ユーザの直近ツイート10件を取得
     ツイートとミサワ画像の辞書を返却
@@ -201,11 +206,11 @@ def make_reply_text(user,  tweet):
     - OUT : 返信内容の文字列
     '''
     # 本来ptnは使いまわしたほうが好ましい
-    ptn1 = re.compile ('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
-    ptn2 = re.compile ('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
-    ptn3 = re.compile ('【.+】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
-    ptn4 = re.compile ('[wｗWW]{4,}|\n+')  # 4回以上のｗ、改行はスペース一つに
-    ptn5 = re.compile ('(、|。|!|！|\?|？|\.|．|…|w|ｗ|」|】|』)\s')  # 文末の空白
+    ptn1 = re.compile('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
+    ptn2 = re.compile('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
+    ptn3 = re.compile('【.+】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
+    ptn4 = re.compile('[wｗWW]{4,}|\n+')  # 4回以上のｗ、改行はスペース一つに
+    ptn5 = re.compile('(、|。|!|！|\?|？|\.|．|…|w|ｗ|」|】|』)\s')  # 文末の空白
 
     text = tweet.text
     text = re.sub(ptn1, '', text)
@@ -224,6 +229,28 @@ def make_reply_text(user,  tweet):
     reply_text += re.sub(r'\n|\s', '', tweet.author.name)
     reply_text += text
     return reply_text
+
+
+def reply_to_status(api, meigen, user, user_tweet):
+    '''対象のツイートに対しリプライを返す
+    - IN  : 返信する名言の辞書, ユーザオブジェクト, ツイートオブジェクト
+    '''
+    # 画像のパス
+    pathToImg = 'img/' + str(meigen['id']) + '.gif'
+    if not os.path.exists(pathToImg):
+        logger.error('misawa download error', exc_info=True)            
+        return
+
+    # ユーザの投稿内容に画像をつけて投稿
+    reply_text = make_reply_text(user, user_tweet)
+    logger.info("reply_text:[%s]" % reply_text)
+    logger.info("url:[%s]" % meigen['image'])
+    try:
+        # api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
+        pass
+    except:
+        logger.error('reply error', exc_info=True)
+    return
 
 
 def main():
@@ -245,7 +272,7 @@ def main():
         logger.info("========searching user========")
         user_dic = {}
         api_get_followers(api, user_dic)
-        api_search_user_with_name(api, user_dic)
+        tweet_to_reply = api_search_user_with_name(api, user_dic)
 
     logger.info("========calc start========")
     isModeled = False
@@ -264,8 +291,8 @@ def main():
                 model = models.LsiModel.load(pathToModel)
                 dictionary = corpora.Dictionary.load_from_text(pathToDict)
             elif method[0:3] in ["d2v", "doc"]:
-                d2v    = models.doc2vec.Doc2Vec(hashfxn=matcher_main.myhashfxn)
-                d2v    = d2v.load(pathToModel)
+                d2v   = models.doc2vec.Doc2Vec(hashfxn=matcher_main.myhashfxn)
+                d2v   = d2v.load(pathToModel)
                 model = models.LsiModel.load(pathToModel)
             else:
                 logger.critical("invalid model")
@@ -293,21 +320,25 @@ def main():
         if not isMatched:
             continue
 
-        # 画像のパス
-        pathToImg = 'img/' + str(meigen['id']) + '.gif'
-        if not os.path.exists(pathToImg):
-            logger.error('misawa download error', exc_info=True)            
-            continue
+        reply_to_status(api, meigen, user, user_tweet) 
 
-        # ユーザの投稿内容に画像をつけて投稿
-        reply_text = make_reply_text(user, user_tweet)
-        logger.info("reply_text:[%s]" % reply_text)
-        logger.info("url:[%s]" % meigen['image'])
-        try:
-            api.update_with_media('data/picture.gif', reply_text, in_reply_to_status_id=user_tweet.id)
-            # pass
-        except:
-            logger.error('reply error', exc_info=True)
+    for tweet in tweet_to_reply:
+        if isModeled:
+            r, meigen = matcher_main.search_misawa(meigenWords, tweet.text,
+                         retR=True, method=method, model=model, dictionary=dictionary)
+        else:
+            r, meigen = matcher_main.search_misawa(meigenWords, tweet.text, retR=True)
+        # TODO:微妙な場合用に汎用性のある画像をリプライする
+        if isModeled:
+            tr = -0.1
+        else:
+            tr = 0.98
+        if r < tr:
+            try:
+                reply_to_status(meigen, tweet.user.screen_name, tweet)
+            except:
+                logging.error("Unexpected Error", exc_info=True)
+
     logger.info("==========================================")
 
 
