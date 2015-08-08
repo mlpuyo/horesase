@@ -294,7 +294,7 @@ def main():
             continue
 
         # 画像のパス
-        pathToImg = 'img/' + meigen['id'] + '.png'
+        pathToImg = 'img/' + str(meigen['id']) + '.gif'
         if not os.path.exists(pathToImg):
             logger.error('misawa download error', exc_info=True)            
             continue
