@@ -246,7 +246,6 @@ def main():
         user_dic = {}
         api_get_followers(api, user_dic)
         api_search_user_with_name(api, user_dic)
-        logger.info("==============================\n")
 
     logger.info("========calc start========")
     isModeled = False
@@ -294,13 +293,12 @@ def main():
         if not isMatched:
             continue
 
-        # 画像をダウンロード
-        try:
-            with urllib.request.urlopen(meigen['image']) as response, open('data/picture.gif', 'wb') as out_file:
-                shutil.copyfileobj(response, out_file)
-        except:
-            logger.error('misawa download error', exc_info=True)
+        # 画像のパス
+        pathToImg = 'img/' + meigen['id'] + '.png'
+        if not os.path.exists(pathToImg):
+            logger.error('misawa download error', exc_info=True)            
             continue
+
         # ユーザの投稿内容に画像をつけて投稿
         reply_text = make_reply_text(user, user_tweet)
         logger.info("reply_text:[%s]" % reply_text)

@@ -6,10 +6,9 @@ import pickle
 import csv
 import unicodedata
 import MeCab
+import shutil
 import urllib.request
-from subprocess import Popen, PIPE
-from datetime import datetime
-from gensim import corpora, models, similarities, matutils
+from gensim import corpora, models, similarities
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -41,7 +40,7 @@ def breakdown_into_validwords(sentence):
         if word in ['ちんちん', 'ちんこ', 'キンタマ', 'きんたま', '痴漢']:
             return []
         # TODO:除外リストの作成
-        if word in ['今日', '俺', '私', '僕', '人', '思う', 'ちゃう', 
+        if word in ['今日', '俺', '私', '僕', '人', '思う', 'ちゃう',
                 '何', '行く', 'もらう', 'られる', 'くれる', 'すぎる']:
             continue
         try:
@@ -90,8 +89,21 @@ def make_pickle_from_json(fn='meigens.json'):
 
     meigenData = []
     for meigen in meigenRowData:
-        if meigen['character'] in ['ちんちんでか男(30)', 'チーポー(2)']:
-            continue
+
+        if not os.path.exists("img"):
+            os.mkdir("img")
+        imgName = 'img/' + str(meigen['id']) + '.gif'
+
+
+        if not os.path.exists(imgName):
+            try:
+                with urllib.request.urlopen(meigen['image'], timeout=100) as response, open(imgName, 'wb') as out_file:
+                    shutil.copyfileobj(response, out_file)
+            except:
+                logger.error('Could not download img id=[%s]' % meigen['id'], exc_info=True)
+
+        # if meigen['character'] in ['ちんちんでか男(30)', 'チーポー(2)']:
+        #     continue
         data = {}
         words = breakdown_into_validwords(meigen['body'])
         # title_words = breakdown_into_validwords(meigen['title'])
@@ -102,7 +114,7 @@ def make_pickle_from_json(fn='meigens.json'):
         #         title_words.remove(word)
 
         # words += title_words
-        if len(words) <= 2:
+        if len(words) <= 1:
             continue
 
         data['id'] = meigen['id']
@@ -171,7 +183,5 @@ if __name__ == '__main__':
     """
     import logging
     logging.basicConfig(level=logging.INFO)
-    #test_func_1('今日はいい天気ですね')
-    test_func_2();
-
-
+    # test_func_1('今日はいい天気ですね')
+    test_func_2()
