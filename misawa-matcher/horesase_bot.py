@@ -166,8 +166,9 @@ def get_user_text(api, user, meigenWords, tr=0.98,
             # SDATE以前のツイートは無視する
             if tweet.created_at < SDATE:
                 continue
-            # 他ユーザへのリプライは対象外
-            if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
+            # 他ユーザへのリプライは対象外、自身へのリプライは別途処理
+            # if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
+            if "@" in tweet.text:
                 continue
         try:
             r, meigen = matcher_main.search_misawa(meigenWords, tweet.text,
