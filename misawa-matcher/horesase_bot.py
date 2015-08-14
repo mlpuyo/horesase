@@ -62,7 +62,7 @@ def api_authenticate():
         auth = tweepy.OAuthHandler(key.CONSUMER_KEY, key.CONSUMER_SECRET)
         auth.set_access_token(key.OAUTH_TOKEN, key.OAUTH_SECRET)
     except:
-        logger.critical("API Connection Error", exc_info=True)
+        logger.critical("API Connection Error")
         sys.exit()
     return tweepy.API(auth)
 
@@ -77,14 +77,14 @@ def api_search_user_with_name(api, user_dic):
     try:
         candidate_tweets = api.search(q=at_name)
     except:
-        logger.error('api-seach error', exc_info=True)
+        logger.error('api-seach error')
 
     if (os.path.exists(ID_DUMP_FN)):
         with open(ID_DUMP_FN, 'rb') as f:
             try:
                 stid_dic = pickle.load(f)
             except:
-                logger.error('empty pickle file', exc_info=True)
+                logger.error('empty pickle file')
 
     for tweet in candidate_tweets:
         # SDATE以前のツイートは無視する
@@ -126,7 +126,7 @@ def api_get_followers(api, user_dic):
         for friend in c.items():
             user_dic[friend.screen_name] = "friend"
     except:
-        logger.critical("failed to get followers/friends", exc_info=True)
+        logger.critical("failed to get followers/friends")
 
     return user_dic
 
@@ -142,7 +142,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
     try:
         user_tweets = api.user_timeline(id=user, count=20)
     except:
-        logging.critical("user_timeline fetch error", exc_info=True)
+        logging.critical("timeline fetch error:[%s]" % user)
         return "no_tweet", "no_image", False
 
     minr = 999.
@@ -155,7 +155,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
             try:
                 stid_dic = pickle.load(f)
             except EOFError:
-                logger.error('empty pickle file', exc_info=True)
+                logger.error('empty pickle file')
 
     for i, tweet in enumerate(user_tweets):
         _id = tweet.id
@@ -174,10 +174,10 @@ def get_user_text(api, user, meigenWords, tr=0.98,
             r, meigen = matcher_main.search_misawa(meigenWords, tweet.text,
                          retR=True, method=method, model=model, dictionary=dictionary)
         except UnicodeEncodeError:
-            logging.warning("UnicodeEncodeError", exc_info=True)
+            logging.warning("UnicodeEncodeError")
             continue
         except:
-            logging.error("Unexpected Error", exc_info=True)
+            logging.error("Unexpected Error")
             continue
 
         if r < minr:
@@ -241,7 +241,7 @@ def reply_to_status(api, meigen, user, user_tweet):
     # 画像のパス
     pathToImg = 'img/' + str(meigen['id']) + '.gif'
     if not os.path.exists(pathToImg):
-        logger.error('misawa download error', exc_info=True)            
+        logger.error('misawa download error')            
         return
 
     # ユーザの投稿内容に画像をつけて投稿
@@ -252,9 +252,10 @@ def reply_to_status(api, meigen, user, user_tweet):
         api.update_with_media(pathToImg, reply_text, in_reply_to_status_id=user_tweet.id)
         # pass
     except:
-        logger.error('reply error', exc_info=True)
-        logger.info("reply_text:[%s]" % reply_text)
-        logger.info("url:[%s]" % meigen['image'])
+        err_mes = 'reply error\n'
+        err_mes += ("reply_text:[%s]\n" % reply_text)
+        err_mes += ("url:[%s]" % meigen['image'])
+        logger.error(err_mes)
     return
 
 
@@ -267,7 +268,7 @@ def main():
         try:
             meigenWords = pickle.load(f)
         except EOFError:
-            logger.error('empty pickle file', exc_info=True)
+            logger.error('empty pickle file')
 
     # Twitter利用
     api = api_authenticate()
@@ -304,7 +305,7 @@ def main():
                 sys.exit()
             logger.info("model loaded")
         except:
-            logger.critical("failed to load model", exc_info=True)
+            logger.critical("failed to load model")
             sys.exit()
 
     for user, cls in user_dic.items():
@@ -325,7 +326,7 @@ def main():
         if not isMatched:
             continue
 
-        reply_to_status(api, meigen, user, user_tweet) 
+        reply_to_status(api, meigen, user, user_tweet)
 
     for tweet in tweet_to_reply:
         if isModeled:
@@ -342,7 +343,7 @@ def main():
             try:
                 reply_to_status(meigen, tweet.user.screen_name, tweet)
             except:
-                logging.error("Unexpected Error", exc_info=True)
+                logging.error("Unexpected Error")
 
     logger.info("==========================================")
 
