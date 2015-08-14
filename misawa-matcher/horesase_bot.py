@@ -221,6 +221,8 @@ def make_reply_text(user,  tweet):
     text = re.sub(ptn5, r'\1', text)  # 文末の空白は除外
     text = re.sub(r'\s+', ' ', text)  # 2つ以上の空白は1つに
     text = re.sub(r'\s+$', '', text)  # 末尾の空白は削除
+    if text == "":
+        text = tweet.text
 
     text = text.replace('「', '『')
     text = text.replace('」', '』')
