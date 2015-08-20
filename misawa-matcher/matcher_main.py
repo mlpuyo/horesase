@@ -27,7 +27,7 @@ def search_misawa(meigens, targetSentence, retR=False,
     if len(targetWords) <= 2 or len(targetWords) >= 30:
         logger.warning("bad tweet for misawa-recommend")
         if retR:
-            return 1., "no_image"
+            return 1., None
         else:
             return (1.)
 
@@ -65,7 +65,7 @@ def search_misawa(meigens, targetSentence, retR=False,
     if not hit:
         logger.info("ベストマッチなし")
         if retR:
-            return 1., "no_image"
+            return 1., None
         else:
             return (1.)
 

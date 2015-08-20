@@ -349,7 +349,7 @@ def main():
             try:
                 reply_to_status(meigen, tweet.user.screen_name, tweet)
             except:
-                logging.error("Unexpected Error")
+                logging.info("nothing to reply")
 
     logger.info("==========================================")
 
