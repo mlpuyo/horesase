@@ -224,13 +224,19 @@ def make_reply_text(user,  tweet):
     if text == "":
         text = tweet.text
 
-    text = text.replace('「', '『')
-    text = text.replace('」', '』')
-    text = "「" + text + "」"
+    # text = text.replace('「', '『')
+    # text = text.replace('」', '』')
+    text = re.sub("[「｢]",  "『",  text)
+    text = re.sub("[」｣]",  "』",  text)
+    text = "「" + text
 
     reply_text = "@" + user + "\n"
     reply_text += re.sub(r'\n|\s', '', tweet.author.name)
     reply_text += text
+    if len(reply_text) > 116:
+        reply_text = reply_text[:116] + "…"
+    reply_text = reply_text + "」"
+
     return reply_text
 
 
