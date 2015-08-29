@@ -9,6 +9,7 @@ import shutil
 import tweepy
 import datetime
 import yaml  # pip install pyyaml
+import random
 import mecab_func
 import matcher_main
 from data import key
@@ -168,7 +169,7 @@ def get_user_text(api, user, meigenWords, tr=0.98,
                 continue
             # 他ユーザへのリプライは対象外、自身へのリプライは別途処理
             # if "@" in tweet.text and not ("@" + key.BOT_NAME in tweet.text):
-            if "@" in tweet.text:
+            if "@" in tweet.text or "＠" in tweet.text:
                 continue
         try:
             r, meigen = matcher_main.search_misawa(meigenWords, tweet.text,
@@ -207,6 +208,7 @@ def make_reply_text(user,  tweet):
     - OUT : 返信内容の文字列
     '''
     # 本来ptnは使いまわしたほうが好ましい
+    ptn0 = re.compile('^[@＠][^\s\n]+[\s\n]')  # リプライ先を削除
     ptn1 = re.compile('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
     ptn2 = re.compile('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
     ptn3 = re.compile('【.+】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
@@ -214,6 +216,7 @@ def make_reply_text(user,  tweet):
     ptn5 = re.compile('(、|。|!|！|\?|？|\.|．|…|w|ｗ|」|】|』)\s')  # 文末の空白
 
     text = tweet.text
+    text = re.sub(ptn0, '', text)
     text = re.sub(ptn1, '', text)
     text = re.sub(ptn2, '', text)
     text = re.sub(ptn3, '', text)
@@ -221,8 +224,8 @@ def make_reply_text(user,  tweet):
     text = re.sub(ptn5, r'\1', text)  # 文末の空白は除外
     text = re.sub(r'\s+', ' ', text)  # 2つ以上の空白は1つに
     text = re.sub(r'\s+$', '', text)  # 末尾の空白は削除
-    if text == "":
-        text = tweet.text
+    if text == "" or text == " ":
+        return "@" + user
 
     # text = text.replace('「', '『')
     # text = text.replace('」', '』')
@@ -233,8 +236,8 @@ def make_reply_text(user,  tweet):
     reply_text = "@" + user + "\n"
     reply_text += re.sub(r'\n|\s', '', tweet.author.name)
     reply_text += text
-    if len(reply_text) > 116:
-        reply_text = reply_text[:116] + "…"
+    if len(reply_text) > 115:
+        reply_text = reply_text[:115] + "…"
     reply_text = reply_text + "」"
 
     return reply_text
@@ -341,15 +344,12 @@ def main():
         else:
             r, meigen = matcher_main.search_misawa(meigenWords, tweet.text, retR=True)
         # TODO:微妙な場合用に汎用性のある画像をリプライする
-        if isModeled:
-            tr = -0.1
-        else:
-            tr = 0.98
-        if r < tr:
-            try:
-                reply_to_status(meigen, tweet.user.screen_name, tweet)
-            except:
-                logging.info("nothing to reply")
+        if meigen is None:
+            meigen = random.choice(meigenWords)
+        try:
+            reply_to_status(api, meigen, tweet.user.screen_name, tweet)
+        except:
+            logging.error("Unexpected Error")
 
     logger.info("==========================================")
 
