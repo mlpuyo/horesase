@@ -216,7 +216,7 @@ def make_reply_text(user,  tweet):
     ptn0 = re.compile('^[@＠][^\s\n]+[\s\n]')  # リプライ先を削除
     ptn1 = re.compile('https?://[A-Za-z0-9\'~+\-=_.,/%\?!;:@#\*&\(\)]+')  # urlを除外
     ptn2 = re.compile('[#＃][Ａ-Ｚａ-ｚA-Za-z一-鿆0-9０-９ぁ-ヶｦ-ﾟー]+')  # ハッシュタグを除外
-    ptn3 = re.compile('【.+】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
+    ptn3 = re.compile('【.+?】|[0-9]+RT\s?')  # 拡散希望等のタグ、スパムのRT等
     ptn4 = re.compile('[wｗWW]{4,}|\n+')  # 4回以上のｗ、改行はスペース一つに
     ptn5 = re.compile('(、|。|!|！|\?|？|\.|．|…|w|ｗ|」|】|』)\s')  # 文末の空白
 
