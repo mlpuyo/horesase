@@ -4,8 +4,6 @@ import os
 import sys
 import re
 import pickle
-import urllib
-import shutil
 import tweepy
 import datetime
 import yaml  # pip install pyyaml
@@ -13,7 +11,7 @@ import random
 import mecab_func
 import matcher_main
 from data import key
-from gensim import corpora, models, similarities, matutils
+from gensim import corpora, models
 import logging.config
 from logging import getLogger
 """
@@ -90,6 +88,13 @@ def api_search_user_with_name(api, user_dic):
     for tweet in candidate_tweets:
         # SDATE以前のツイートは無視する
         if tweet.created_at < SDATE:
+            continue
+
+        # リツイートは無視
+        if "RT" in tweet.text:
+            continue
+
+        if tweet.user.screen_name == key.BOT_NAME:
             continue
 
         if not(tweet.id in stid_dic):
@@ -247,6 +252,11 @@ def reply_to_status(api, meigen, user, user_tweet):
     '''対象のツイートに対しリプライを返す
     - IN  : 返信する名言の辞書, ユーザオブジェクト, ツイートオブジェクト
     '''
+    # 自分へのリプライは禁止
+    if user == key.BOT_NAME:
+        logger.error('reply to bot')            
+        return
+
     # 画像のパス
     pathToImg = 'img/' + str(meigen['id']) + '.gif'
     if not os.path.exists(pathToImg):
